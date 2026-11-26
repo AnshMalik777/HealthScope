@@ -1,27 +1,45 @@
 # HealthScope – Healthcare Data Analytics & Visualisation
 
-HealthScope is a healthcare analytics project designed to explore healthcare data, identify disease patterns, analyse patient demographics, and understand treatment costs through interactive Power BI dashboards and AI-powered question answering.
+**HealthScope** is a Big Data Healthcare Analysis and Visualisation project that explores healthcare trends, disease distribution, patient demographics, treatment expenditure and hospital insights through interactive Power BI dashboards and an AI-powered question-answering interface.
 
-## Key Features
+## 🌐 Live Website
+
+**[Visit HealthScope](https://anshmalik777.github.io/HealthScope/)**
+
+*The link becomes active once GitHub Pages has successfully published the website.*
+
+## ✨ Key Features
 
 - **Demographic Analysis:** Explore patient distribution by age, gender, state and region.
-- **Time Trend Analysis:** Analyse healthcare trends over time.
-- **Disease Distribution:** Examine disease frequency and geographical distribution.
-- **Risk Analysis:** Explore health risk factors and patient outcomes.
-- **Cost Analysis:** Analyse treatment expenditure and hospital costs.
-- **Hospital Insights:** Explore hospital types and healthcare service patterns.
-- **AI-powered Assistant:** Ask questions about healthcare data using Gemini AI.
+- **Time Trend Analysis:** Examine healthcare patterns over time.
+- **Disease Distribution:** Analyse disease frequency and geographical distribution.
+- **Risk Analysis:** Explore health risk factors, severity and patient outcomes.
+- **Cost Analysis:** Understand treatment expenditure and hospital-related costs.
+- **Hospital Insights:** Examine hospital types and healthcare service patterns.
+- **AI-powered Assistant:** Ask questions about healthcare data using Google Gemini.
 
-## Technologies Used
+## 📊 Dashboard Pages
+
+1. Demographic Analysis
+2. Time Trend Analysis
+3. Disease Distribution
+4. Risk Analysis
+5. Cost Analysis
+6. Hospital Insights
+
+## 🛠️ Technologies Used
 
 - Python
 - Pandas
 - Flask
 - Google Gemini API
-- Power BI
-- HTML, CSS and JavaScript
+- Microsoft Power BI
+- HTML
+- CSS
+- JavaScript
+- GitHub Pages
 
-## Project Structure
+## 📁 Project Structure
 
 ```text
 HealthScope/
@@ -32,24 +50,29 @@ HealthScope/
 ├── question_engine.py
 ├── columns.txt
 ├── requirements.txt
-├── Website_Frontend.html
+├── index.html
 └── .gitignore
 ```
 
-## Running Locally
+## 🚀 Website
 
-1. Clone this repository.
-2. Create and activate a Python virtual environment.
-3. Install dependencies using `pip install -r requirements.txt`.
-4. Configure your Gemini API key in a local `.env` file.
-5. Place your authorised dataset in the required local data folder.
-6. Start the Flask backend using `python api.py`.
-7. Open `Website_Frontend.html` in your browser.
+The frontend is published using GitHub Pages. The website includes the interactive project interface and embedded Power BI dashboards.
 
-## Note
+## 🤖 AI Assistant and Backend
 
-The dataset and API credentials are not included in this public repository. Users must configure their own authorised dataset and Gemini API key.
+The AI assistant uses a Python backend and Google Gemini API. Local backend functionality requires Python dependencies, a configured API key and an authorised dataset.
 
-## Project Purpose
+The public website does not automatically run the local Python backend.
 
-Developed as an academic Big Data Healthcare Analysis project to demonstrate data analytics, interactive visualisation and AI-assisted exploration of healthcare information.
+## 🔐 Data Privacy
+
+The healthcare dataset and API credentials are excluded from this public repository. No private patient records or API keys should be uploaded.
+
+## 🎯 Project Objective
+
+To demonstrate the use of big data analytics, data visualisation and AI-assisted exploration to understand healthcare patterns and generate meaningful insights.
+
+---
+
+**Academic Project:** Big Data Healthcare Analysis  
+**Repository:** [HealthScope on GitHub](https://github.com/AnshMalik777/HealthScope)
