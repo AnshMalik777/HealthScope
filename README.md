@@ -15,38 +15,60 @@
 HealthScope is a Big Data Healthcare Analysis and Visualisation project developed to explore healthcare patterns, disease distribution, patient demographics, treatment expenditure and hospital insights.
 
 The project combines data analytics, interactive Power BI dashboards and an AI-powered question-answering assistant to make healthcare data easier to explore and understand.
-## 🖥️ Project Screenshots
+## 📸 Project Screenshots
 
-### 1. HealthScope Website
-![HealthScope Website](images/image1.png)
-
-### 2. Dashboard Overview
-![Dashboard Overview](images/image2.png)
-
-### 3. Demographic Analysis
-![Demographic Analysis](images/image3.png)
-
-### 4. Time Trend Analysis
-![Time Trend Analysis](images/image4.png)
-
-### 5. Disease Distribution
-![Disease Distribution](images/image5.png)
-
-### 6. Risk Analysis
-![Risk Analysis](images/image6.png)
-
-### 7. Cost Analysis
-![Cost Analysis](images/image7.png)
-
-### 8. Hospital Insights
-![Hospital Insights](images/image8.png)
-
-### 9. AI Healthcare Assistant
-![AI Healthcare Assistant](images/image9.png)
-
-### 10. HealthScope Project Preview
-![HealthScope Project Preview](images/image10.png)
-
+<table>
+  <tr>
+    <td align="center">
+      <img src="img1.png" width="100%" alt="Screenshot 1">
+      <br><b>Screenshot 1</b>
+    </td>
+    <td align="center">
+      <img src="img2.png" width="100%" alt="Screenshot 2">
+      <br><b>Screenshot 2</b>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="img3.png" width="100%" alt="Screenshot 3">
+      <br><b>Screenshot 3</b>
+    </td>
+    <td align="center">
+      <img src="img4.png" width="100%" alt="Screenshot 4">
+      <br><b>Screenshot 4</b>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="img5.png" width="100%" alt="Screenshot 5">
+      <br><b>Screenshot 5</b>
+    </td>
+    <td align="center">
+      <img src="img6.png" width="100%" alt="Screenshot 6">
+      <br><b>Screenshot 6</b>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="img7.png" width="100%" alt="Screenshot 7">
+      <br><b>Screenshot 7</b>
+    </td>
+    <td align="center">
+      <img src="img8.png" width="100%" alt="Screenshot 8">
+      <br><b>Screenshot 8</b>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="img9.png" width="100%" alt="Screenshot 9">
+      <br><b>Screenshot 9</b>
+    </td>
+    <td align="center">
+      <img src="img10.png" width="100%" alt="Screenshot 10">
+      <br><b>Screenshot 10</b>
+    </td>
+  </tr>
+</table>
 ## ✨ Key Features
 
 - Interactive healthcare analytics website.
