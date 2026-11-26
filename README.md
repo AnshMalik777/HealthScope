@@ -1,31 +1,42 @@
-# HealthScope – Healthcare Data Analytics & Visualisation
+# 🏥 HealthScope – Healthcare Data Analytics & Visualisation
 
-**HealthScope** is a Big Data Healthcare Analysis and Visualisation project that explores healthcare trends, disease distribution, patient demographics, treatment expenditure and hospital insights through interactive Power BI dashboards and an AI-powered question-answering interface.
+**An interactive healthcare analytics project powered by Python, Google Gemini AI and Microsoft Power BI.**
 
-## 🌐 Live Website
+## 🌐 Explore HealthScope
 
-**[Visit HealthScope](https://anshmalik777.github.io/HealthScope/)**
+### 🚀 [OPEN LIVE WEBSITE](https://anshmalik777.github.io/HealthScope/)
 
-*The link becomes active once GitHub Pages has successfully published the website.*
+**[View GitHub Repository](https://github.com/AnshMalik777/HealthScope)**
+
+---
+
+## 📌 About the Project
+
+HealthScope is a Big Data Healthcare Analysis and Visualisation project developed to explore healthcare patterns, disease distribution, patient demographics, treatment expenditure and hospital insights.
+
+The project combines data analytics, interactive Power BI dashboards and an AI-powered question-answering assistant to make healthcare data easier to explore and understand.
 
 ## ✨ Key Features
 
-- **Demographic Analysis:** Explore patient distribution by age, gender, state and region.
-- **Time Trend Analysis:** Examine healthcare patterns over time.
-- **Disease Distribution:** Analyse disease frequency and geographical distribution.
-- **Risk Analysis:** Explore health risk factors, severity and patient outcomes.
-- **Cost Analysis:** Understand treatment expenditure and hospital-related costs.
-- **Hospital Insights:** Examine hospital types and healthcare service patterns.
-- **AI-powered Assistant:** Ask questions about healthcare data using Google Gemini.
+- Interactive healthcare analytics website.
+- Six Power BI dashboard sections.
+- Gemini AI-powered healthcare question assistant.
+- Patient demographic analysis.
+- Disease distribution and geographical analysis.
+- Healthcare time-trend analysis.
+- Risk factor and outcome analysis.
+- Treatment cost and hospital insights.
 
-## 📊 Dashboard Pages
+## 📊 Dashboard Modules
 
-1. Demographic Analysis
-2. Time Trend Analysis
-3. Disease Distribution
-4. Risk Analysis
-5. Cost Analysis
-6. Hospital Insights
+| Dashboard | Description |
+|---|---|
+| Demographic Analysis | Patient distribution by age, gender, state and region |
+| Time Trend Analysis | Healthcare trends across months, quarters and years |
+| Disease Distribution | Disease frequency and category analysis |
+| Risk Analysis | Severity, smoking, alcohol and other risk factors |
+| Cost Analysis | Treatment expenditure and cost comparisons |
+| Hospital Insights | Hospital types, treatment and recovery patterns |
 
 ## 🛠️ Technologies Used
 
@@ -39,10 +50,19 @@
 - JavaScript
 - GitHub Pages
 
+## 🤖 AI Healthcare Assistant
+
+The HealthScope AI Assistant allows users to ask natural-language questions about healthcare data.
+
+It uses Google Gemini for question interpretation and Python Pandas for data calculations.
+
+The local assistant requires the Python backend, configured Gemini API key and the authorised healthcare dataset to be available.
+
 ## 📁 Project Structure
 
 ```text
 HealthScope/
+│
 ├── api.py
 ├── app.py
 ├── analysis_engine.py
@@ -54,25 +74,35 @@ HealthScope/
 └── .gitignore
 ```
 
-## 🚀 Website
+## ▶️ Run Locally
 
-The frontend is published using GitHub Pages. The website includes the interactive project interface and embedded Power BI dashboards.
+1. Clone or download this repository.
+2. Create a Python virtual environment.
+3. Install dependencies:
 
-## 🤖 AI Assistant and Backend
+   `pip install -r requirements.txt`
 
-The AI assistant uses a Python backend and Google Gemini API. Local backend functionality requires Python dependencies, a configured API key and an authorised dataset.
+4. Configure your Gemini API key in a local `.env` file.
+5. Place the authorised dataset in the required local `data` folder.
+6. Start the Flask backend:
 
-The public website does not automatically run the local Python backend.
+   `python api.py`
+
+7. Open the website using VS Code Live Server.
 
 ## 🔐 Data Privacy
 
-The healthcare dataset and API credentials are excluded from this public repository. No private patient records or API keys should be uploaded.
+API credentials and the local healthcare dataset are not included in this public repository. Use only authorised data and keep API keys private.
 
 ## 🎯 Project Objective
 
-To demonstrate the use of big data analytics, data visualisation and AI-assisted exploration to understand healthcare patterns and generate meaningful insights.
+To demonstrate the application of big data analytics, healthcare visualisation and AI-assisted data exploration through an interactive web-based platform.
 
 ---
 
-**Academic Project:** Big Data Healthcare Analysis  
-**Repository:** [HealthScope on GitHub](https://github.com/AnshMalik777/HealthScope)
+### 🌐 Quick Links
+
+- **Live Website:** https://anshmalik777.github.io/HealthScope/
+- **GitHub Repository:** https://github.com/AnshMalik777/HealthScope
+
+*HealthScope – Making Healthcare Data Meaningful Through Analytics and AI.*
