@@ -1,0 +1,4376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#030a18">
+<meta name="description" content="HealthScope — an interactive healthcare data analysis project using Excel and Power BI.">
+<title>HealthScope | Healthcare Analytics</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --page: #f4f7fa;
+  --page-soft: #edf2f6;
+  --white: #ffffff;
+  --surface: rgba(255,255,255,.76);
+  --surface-strong: rgba(255,255,255,.92);
+
+  --ink: #172c40;
+  --ink-soft: #38536b;
+  --muted: #718397;
+
+  --blue: #347fc1;
+  --blue-dark: #246aab;
+  --cyan: #35aabd;
+  --lavender: #8c91d8;
+
+  --line: rgba(74,105,133,.13);
+  --shadow: 0 18px 55px rgba(48,75,101,.09);
+  --shadow-hover: 0 25px 65px rgba(48,75,101,.14);
+
+  --radius: 22px;
+  --nav-height: 76px;
+  --content-width: 1180px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 100px;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background:
+    radial-gradient(ellipse at 80% 5%, rgba(193,218,235,.30), transparent 38%),
+    linear-gradient(145deg, #f8fafc 0%, #eff4f8 48%, #f7f9fb 100%);
+  color: var(--ink);
+  font-family: "DM Sans", sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  color: #15344d;
+  background: rgba(91,177,205,.24);
+}
+
+/* =====================================================
+   GLOBAL BACKGROUND AND SINGLE SILVER RING
+===================================================== */
+
+.background-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  perspective: 1200px;
+  isolation: isolate;
+}
+
+.background-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 75% 45%, rgba(186,211,229,.25), transparent 42%),
+    linear-gradient(120deg, rgba(255,255,255,.20), rgba(226,236,244,.18));
+}
+
+.silver-ring {
+  position: absolute;
+  width: min(57vw, 690px);
+  aspect-ratio: 1;
+  top: 50%;
+  left: 76%;
+  border-radius: 50%;
+
+  border: 1px solid rgba(255,255,255,.95);
+
+  background:
+    radial-gradient(circle at 27% 23%,
+      rgba(255,255,255,.90),
+      rgba(255,255,255,.12) 32%,
+      transparent 57%);
+
+  box-shadow:
+    inset 12px 12px 28px rgba(255,255,255,.95),
+    inset -16px -18px 35px rgba(122,151,175,.17),
+    0 0 0 10px rgba(218,228,236,.16),
+    0 0 0 11px rgba(255,255,255,.68),
+    0 30px 100px rgba(90,125,153,.13);
+
+  transform:
+    translate(-50%,-50%)
+    rotateX(66deg)
+    rotateZ(-22deg);
+
+  transform-style: preserve-3d;
+  will-change: transform;
+  opacity: .72;
+
+  animation: ringFloat 12s ease-in-out infinite;
+}
+
+/* A single continuous sculptural ring.
+   The inner edge creates depth without adding another object. */
+
+.silver-ring::before {
+  content: "";
+  position: absolute;
+  inset: 17%;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.95);
+
+  box-shadow:
+    inset 0 0 18px rgba(255,255,255,.95),
+    0 0 0 1px rgba(153,178,197,.15);
+}
+
+.silver-ring::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: rgba(255,255,255,.98);
+  border-right-color: rgba(180,199,215,.35);
+  filter: drop-shadow(0 8px 12px rgba(103,135,160,.12));
+}
+
+@keyframes ringFloat {
+  0%, 100% {
+    margin-top: 0;
+  }
+  50% {
+    margin-top: -17px;
+  }
+}
+
+/* The ring moves gently with the page.
+   JavaScript updates these CSS variables. */
+
+.background-stage {
+  --ring-x: 0px;
+  --ring-y: 0px;
+  --ring-rotate: 0deg;
+}
+
+.silver-ring {
+  translate: var(--ring-x) var(--ring-y);
+}
+
+/* Soft white veil keeps all text and dashboards readable. */
+
+.background-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    rgba(248,250,252,.82) 0%,
+    rgba(248,250,252,.58) 45%,
+    rgba(248,250,252,.30) 100%
+  );
+}
+
+/* =====================================================
+   PAGE STRUCTURE
+===================================================== */
+
+.page-layer {
+  position: relative;
+  z-index: 2;
+}
+
+.wrap {
+  width: min(calc(100% - 48px), var(--content-width));
+  margin-inline: auto;
+}
+
+section {
+  position: relative;
+  padding: 88px 0;
+  scroll-margin-top: 95px;
+}
+
+.progress {
+  position: fixed;
+  z-index: 3000;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--cyan), var(--blue), var(--lavender));
+  box-shadow: 0 0 14px rgba(52,127,193,.25);
+}
+
+/* =====================================================
+   NAVIGATION
+===================================================== */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 1500;
+  background: rgba(248,250,252,.76);
+  border-bottom: 1px solid rgba(255,255,255,.75);
+  box-shadow: 0 8px 30px rgba(49,78,105,.045);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+}
+
+.nav {
+  min-height: var(--nav-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 25px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.brand-mark {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: white;
+  font-size: 21px;
+  font-weight: 700;
+  background: linear-gradient(140deg, #65b9cb, #397fbd);
+  box-shadow: 0 8px 22px rgba(52,127,193,.20);
+}
+
+.brand-name {
+  color: #1a344c;
+  font-family: "Manrope", sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -.045em;
+}
+
+.brand-name small {
+  display: block;
+  margin-top: 2px;
+  color: #8091a2;
+  font-family: "DM Sans", sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+}
+
+.navlinks {
+  display: flex;
+  align-items: center;
+  gap: 27px;
+}
+
+.navlinks a {
+  position: relative;
+  color: #61758a;
+  font-size: 12px;
+  font-weight: 600;
+  transition: color .2s ease;
+}
+
+.navlinks a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 100%;
+  bottom: -8px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--blue);
+  transition: right .25s ease;
+}
+
+.navlinks a:hover {
+  color: var(--blue-dark);
+}
+
+.navlinks a:hover::after {
+  right: 0;
+}
+
+.menu {
+  display: none;
+  padding: 10px 14px;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255,255,255,.8);
+  cursor: pointer;
+}
+
+/* =====================================================
+   COMMON TYPOGRAPHY AND COMPONENTS
+===================================================== */
+
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--blue-dark);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.kicker::before {
+  content: "";
+  width: 22px;
+  height: 1px;
+  background: var(--cyan);
+}
+
+.gradient {
+  color: transparent;
+  background: linear-gradient(100deg, #267cb5, #36aabd, #858bd4);
+  background-clip: text;
+  -webkit-background-clip: text;
+}
+
+.panel {
+  border: 1px solid rgba(255,255,255,.86);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  transition: transform .3s ease, box-shadow .3s ease;
+}
+
+.panel:hover {
+  box-shadow: var(--shadow-hover);
+}
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 32px;
+  margin-bottom: 34px;
+}
+
+.section-head h2,
+.index-intro h2 {
+  margin: 12px 0 0;
+  color: #1a344b;
+  font-family: "Manrope", sans-serif;
+  font-size: clamp(30px, 4vw, 47px);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -.065em;
+}
+
+.section-head > p {
+  max-width: 460px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.85;
+}
+
+/* =====================================================
+   HOME HERO
+===================================================== */
+
+.hero {
+  min-height: calc(100vh - var(--nav-height));
+  display: flex;
+  align-items: center;
+  padding: 85px 0 105px;
+  overflow: hidden;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(300px, .9fr);
+  align-items: center;
+  gap: 55px;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 3;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  color: #55738a;
+  border: 1px solid rgba(255,255,255,.9);
+  border-radius: 999px;
+  background: rgba(255,255,255,.72);
+  box-shadow: 0 8px 25px rgba(65,95,120,.06);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .035em;
+}
+
+.pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #35aabd;
+  box-shadow: 0 0 0 5px rgba(53,170,189,.10);
+}
+
+.hero h1 {
+  margin: 28px 0 22px;
+  color: #1a344b;
+  font-family: "Manrope", sans-serif;
+  font-size: clamp(44px, 6.1vw, 78px);
+  font-weight: 800;
+  line-height: .99;
+  letter-spacing: -.078em;
+}
+
+.hero-copy {
+  max-width: 570px;
+  margin: 0;
+  color: #718397;
+  font-size: 15px;
+  line-height: 1.95;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 29px;
+}
+
+.primary-link,
+.secondary-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 45px;
+  padding: 0 19px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.primary-link {
+  color: white;
+  background: linear-gradient(120deg, #348eb9, #397fc0);
+  box-shadow: 0 10px 24px rgba(52,127,193,.20);
+}
+
+.secondary-link {
+  color: #45657f;
+  border: 1px solid rgba(99,133,160,.18);
+  background: rgba(255,255,255,.65);
+}
+
+.primary-link:hover,
+.secondary-link:hover {
+  transform: translateY(-3px);
+}
+
+.hero-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 34px;
+  margin-top: 43px;
+}
+
+.stat strong {
+  display: block;
+  color: #1d3a53;
+  font-family: "Manrope", sans-serif;
+  font-size: 27px;
+  font-weight: 800;
+  letter-spacing: -.06em;
+}
+
+.stat span {
+  display: block;
+  margin-top: 5px;
+  color: #8292a2;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+
+/* Minimal hero ring accent: this is typography space,
+   not a second 3D object. */
+
+.hero-side {
+  min-height: 390px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-note {
+  position: relative;
+  z-index: 2;
+  width: min(340px, 100%);
+  padding: 28px;
+  border: 1px solid rgba(255,255,255,.92);
+  border-radius: 24px;
+  background: rgba(255,255,255,.62);
+  box-shadow: 0 20px 60px rgba(58,91,119,.08);
+  backdrop-filter: blur(16px);
+}
+
+.hero-note-label {
+  color: #4387a9;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .17em;
+  text-transform: uppercase;
+}
+
+.hero-note h3 {
+  margin: 13px 0 9px;
+  color: #203b53;
+  font-family: "Manrope", sans-serif;
+  font-size: 23px;
+  letter-spacing: -.05em;
+}
+
+.hero-note p {
+  margin: 0;
+  color: #7a8c9e;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.hero-note-line {
+  height: 1px;
+  margin: 20px 0;
+  background: linear-gradient(90deg, rgba(67,135,169,.35), transparent);
+}
+
+.hero-note-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  color: #7890a3;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.scroll-cue {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #8294a5;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .17em;
+  text-transform: uppercase;
+  transform: translateX(-50%);
+}
+
+.scroll-cue i {
+  width: 17px;
+  height: 27px;
+  position: relative;
+  border: 1px solid #a9bac7;
+  border-radius: 10px;
+}
+
+.scroll-cue i::after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 7px;
+  width: 2px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--blue);
+  animation: scrollHint 1.5s infinite;
+}
+
+@keyframes scrollHint {
+  to {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+}
+
+/* =====================================================
+   REPORT DIRECTORY
+===================================================== */
+
+.index-section {
+  padding-top: 65px;
+}
+
+.index-intro {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 25px;
+  margin-bottom: 32px;
+}
+
+.index-intro p {
+  max-width: 570px;
+  margin: 13px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.index-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.index-card {
+  min-height: 180px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.90);
+  border-radius: 21px;
+  background: rgba(255,255,255,.68);
+  box-shadow: 0 12px 36px rgba(55,88,116,.065);
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.index-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 48px rgba(55,88,116,.12);
+}
+
+.index-number {
+  color: #8299aa;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .16em;
+}
+
+.index-icon {
+  margin: 13px 0 12px;
+  color: #4b91b0;
+  font-size: 23px;
+}
+
+.index-card h3 {
+  margin: 0;
+  color: #29445c;
+  font-family: "Manrope", sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -.025em;
+}
+
+.index-card p {
+  margin: 8px 0 0;
+  color: #8191a0;
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.index-arrow {
+  position: absolute;
+  top: 19px;
+  right: 20px;
+  color: #4389aa;
+  font-size: 17px;
+}
+
+/* =====================================================
+   PROJECT OVERVIEW
+===================================================== */
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.overview-card {
+  padding: 29px;
+}
+
+.overview-card h3 {
+  margin: 0 0 12px;
+  color: #244158;
+  font-family: "Manrope", sans-serif;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -.045em;
+}
+
+.overview-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.85;
+}
+
+.pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.pill {
+  padding: 8px 11px;
+  color: #397c99;
+  border: 1px solid rgba(63,150,178,.12);
+  border-radius: 999px;
+  background: rgba(64,166,190,.07);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* =====================================================
+   REPORT INTRODUCTION PANELS
+===================================================== */
+
+.info-section {
+  padding: 43px 0 12px;
+}
+
+.info-panel {
+  display: grid;
+  grid-template-columns: 1.05fr .95fr;
+  align-items: center;
+  gap: 30px;
+  padding: 30px;
+}
+
+.info-panel h2 {
+  margin: 12px 0 13px;
+  color: #203b53;
+  font-family: "Manrope", sans-serif;
+  font-size: clamp(27px, 3.5vw, 39px);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -.06em;
+}
+
+.info-panel p {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.85;
+}
+
+.info-points {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.info-point {
+  min-height: 104px;
+  padding: 16px;
+  border: 1px solid rgba(255,255,255,.92);
+  border-radius: 15px;
+  background: rgba(239,245,249,.76);
+}
+
+.info-point strong {
+  display: block;
+  margin-bottom: 7px;
+  color: #3d86a5;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.info-point span {
+  display: block;
+  color: #778b9c;
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.info-link {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+/* =====================================================
+   POWER BI REPORT FRAMES
+===================================================== */
+
+.report-section {
+  padding-top: 65px;
+}
+
+.report-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 17px;
+}
+
+.report-top h3 {
+  margin: 7px 0 0;
+  color: #203b53;
+  font-family: "Manrope", sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -.04em;
+}
+
+.report-top p {
+  margin: 6px 0 0;
+  color: #7b8e9f;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.expand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-shrink: 0;
+  min-height: 39px;
+  padding: 0 16px;
+  color: white;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(120deg, #398db4, #397fc0);
+  box-shadow: 0 8px 20px rgba(52,127,193,.17);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.expand:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 25px rgba(52,127,193,.23);
+}
+
+.report-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 300px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.95);
+  border-radius: 20px;
+  background: rgba(255,255,255,.82);
+  box-shadow: 0 18px 50px rgba(54,86,113,.10);
+}
+
+.report-frame iframe {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: white;
+}
+
+.placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  display: grid;
+  place-items: center;
+  padding: 30px;
+  text-align: center;
+}
+
+.placeholder-inner {
+  max-width: 460px;
+}
+
+.placeholder .symbol {
+  margin-bottom: 13px;
+  color: #4b9cba;
+  font-size: 31px;
+}
+
+.placeholder h3 {
+  margin: 0 0 9px;
+  color: #29465e;
+  font-family: "Manrope", sans-serif;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -.04em;
+}
+
+.placeholder p {
+  margin: 0;
+  color: #7d8e9e;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.placeholder code {
+  color: #287fa7;
+  overflow-wrap: anywhere;
+}
+
+/* Fullscreen dashboard mode */
+
+.report-frame.full {
+  position: fixed;
+  inset: 12px;
+  z-index: 5000;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: auto;
+  border-radius: 13px;
+  background: white;
+}
+
+.report-frame.full iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.report-frame.full .placeholder {
+  height: 100%;
+}
+
+/* =====================================================
+   INSIGHTS
+===================================================== */
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.insight {
+  min-height: 205px;
+  padding: 25px;
+}
+
+.insight .icon {
+  margin-bottom: 17px;
+  color: #438eae;
+  font-size: 24px;
+}
+
+.insight h3 {
+  margin: 0 0 9px;
+  color: #29445c;
+  font-family: "Manrope", sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.insight p {
+  margin: 0;
+  color: #7b8d9e;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.insight .tag {
+  display: inline-block;
+  margin-top: 16px;
+  color: #3989a8;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+/* =====================================================
+   METHODOLOGY
+===================================================== */
+
+.method-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 13px;
+}
+
+.method {
+  padding: 23px;
+}
+
+.method > span {
+  color: #438eae;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .15em;
+}
+
+.method h3 {
+  margin: 14px 0 8px;
+  color: #29445c;
+  font-family: "Manrope", sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.method p {
+  margin: 0;
+  color: #7b8d9e;
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+/* =====================================================
+   CLOSING SECTION AND FOOTER
+===================================================== */
+
+.closing {
+  padding: 65px 0 80px;
+}
+
+.closing-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 42px;
+  border: 1px solid rgba(255,255,255,.92);
+  border-radius: 26px;
+  background:
+    radial-gradient(ellipse at 85% 10%, rgba(98,177,207,.15), transparent 42%),
+    linear-gradient(120deg, rgba(231,241,248,.95), rgba(255,255,255,.88));
+  box-shadow: 0 20px 60px rgba(65,100,130,.09);
+}
+
+.closing h2 {
+  margin: 11px 0;
+  color: #203b53;
+  font-family: "Manrope", sans-serif;
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 800;
+  letter-spacing: -.06em;
+}
+
+.closing p {
+  max-width: 650px;
+  margin: 0;
+  color: #75899a;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.footer {
+  position: relative;
+  z-index: 2;
+  padding: 24px 0;
+  color: #8293a2;
+  border-top: 1px solid rgba(255,255,255,.75);
+  font-size: 10px;
+}
+
+.footer-inner {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+/* =====================================================
+   REVEAL ANIMATIONS AND SECTION DOTS
+===================================================== */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  filter: blur(2px);
+  transition:
+    opacity .75s ease,
+    transform .75s cubic-bezier(.2,.7,.2,1),
+    filter .75s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+.dots {
+  position: fixed;
+  z-index: 100;
+  top: 50%;
+  right: 17px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transform: translateY(-50%);
+}
+
+.dots a {
+  width: 6px;
+  height: 6px;
+  display: block;
+  border-radius: 50%;
+  background: #b7c7d3;
+  transition: transform .2s ease, background .2s ease;
+}
+
+.dots a.active {
+  background: #398db4;
+  transform: scale(1.65);
+  box-shadow: 0 0 10px rgba(57,141,180,.30);
+}
+
+/* =====================================================
+   UNIFIED DASHBOARD, INSIGHTS, TECHNOLOGY AND ANALYST
+===================================================== */
+.dashboard-selector{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin:24px 0 16px}
+.dashboard-tab{min-height:52px;padding:10px 13px;border:0;border-radius:13px;background:rgba(255,255,255,.82);box-shadow:0 8px 24px rgba(35,73,108,.07);color:#35536d;font-size:12px;font-weight:800;text-align:left;cursor:pointer;transition:transform .2s,background .2s,box-shadow .2s}
+.dashboard-tab span{display:inline-grid;place-items:center;width:25px;height:25px;margin-right:7px;border-radius:8px;background:#edf4fa;color:#9a2940;font-size:10px}
+.dashboard-tab:hover{transform:translateY(-2px);box-shadow:0 13px 28px rgba(35,73,108,.12)}
+.dashboard-tab.active{color:#fff;background:linear-gradient(115deg,#c92b45,#176fae);box-shadow:0 10px 24px rgba(40,100,145,.18)}
+.dashboard-tab.active span{background:rgba(255,255,255,.18);color:#fff}
+.dashboard-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:19px 0 13px;color:#24445f;font-size:13px;font-weight:800}
+.dashboard-heading>div{display:flex;align-items:center;gap:9px}
+.live-dot{width:8px;height:8px;border-radius:50%;background:#22a879;box-shadow:0 0 0 5px rgba(34,168,121,.12)}
+.unified-report{aspect-ratio:16/9;min-height:430px}
+.unified-report iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.dashboard-selector-bottom{margin-top:16px;margin-bottom:12px}
+.dashboard-note,.insight-footnote{color:#72869a;font-size:11px;line-height:1.75}
+.insight-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:17px}
+.metric-card{padding:21px 22px;min-height:132px}
+.metric-label{display:block;color:#71899e;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+.metric-card strong{display:block;margin:10px 0 5px;color:#1b4564;font-family:Manrope,sans-serif;font-size:clamp(23px,3vw,34px);font-weight:800;letter-spacing:-.06em}
+.metric-card small{color:#8093a3;font-size:10px}
+.data-insight-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.insight-footnote{margin-top:18px;padding:14px 17px;border-left:3px solid #c52a42;background:rgba(255,255,255,.55);border-radius:0 10px 10px 0}
+/* Improved, fully readable dataset-quality note */
+#insights .insight-footnote{display:block;width:100%;box-sizing:border-box;margin:22px 0 0;padding:17px 20px;background:#f0f6fb!important;border:1px solid #c9dceb;border-left:4px solid #176fae;border-radius:12px;color:#294b65!important;font-size:12px;line-height:1.8;opacity:1!important;visibility:visible!important;min-height:0;overflow:visible;white-space:normal;box-shadow:0 6px 18px rgba(26,70,104,.06)}
+#insights .insight-footnote strong{color:#173b58}
+.technology-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.technology-card{padding:24px;min-height:230px}
+.tech-logo{display:grid;place-items:center;width:48px;height:48px;margin-bottom:17px;border-radius:14px;color:#fff;font-family:Manrope,sans-serif;font-size:22px;font-weight:900;box-shadow:0 8px 20px rgba(35,73,108,.13)}
+.excel-logo{background:#16834b}.powerbi-logo{background:#e5aa16;color:#49380b}.dax-logo{background:#287cb4}.html-logo{background:#e45d35}.css-logo{background:#286db5}.js-logo{background:#e8c43b;color:#2d2a1c}
+.technology-card h3{margin:0 0 9px;color:#24445f;font:800 17px Manrope,sans-serif;letter-spacing:-.035em}
+.technology-card p{margin:0;color:#71869a;font-size:12px;line-height:1.8}
+.technology-card>span{display:inline-block;margin-top:16px;padding:7px 10px;border-radius:999px;background:rgba(37,126,181,.09);color:#176fae;font-size:9px;font-weight:800}
+.analyst-panel{padding:25px;max-width:900px;margin-inline:auto}
+.analyst-header{display:flex;align-items:center;gap:12px;padding-bottom:18px;border-bottom:1px solid rgba(27,74,112,.09)}
+.analyst-avatar{display:grid;place-items:center;width:43px;height:43px;border-radius:14px;background:linear-gradient(140deg,#df4058,#176fae);color:#fff;font-size:23px}
+.analyst-header strong,.analyst-header small{display:block}.analyst-header strong{color:#24445f;font-size:13px}.analyst-header small{margin-top:4px;color:#8294a4;font-size:10px}
+.analyst-status{margin-left:auto;padding:6px 10px;border-radius:999px;background:#e8f7f0;color:#23835f;font-size:9px;font-weight:800}
+.suggested-questions{display:flex;flex-wrap:wrap;gap:8px;margin:17px 0}
+.suggested-questions button{padding:8px 11px;border:1px solid rgba(37,126,181,.12);border-radius:999px;background:#f4f8fb;color:#3b6d8c;font-size:10px;font-weight:700;cursor:pointer}
+.analyst-form{display:flex;gap:9px}
+.analyst-form input{flex:1;min-width:0;height:46px;padding:0 15px;border:1px solid rgba(27,74,112,.13);border-radius:12px;background:#fff;color:#24445f;font:12px 'DM Sans',sans-serif;outline:none}
+.analyst-form input:focus{border-color:#3c8bb5;box-shadow:0 0 0 3px rgba(60,139,181,.10)}
+.analyst-form button{padding:0 18px;border:0;border-radius:12px;background:linear-gradient(120deg,#d9344d,#176fae);color:#fff;font-size:11px;font-weight:800;cursor:pointer}
+.analyst-answer{margin-top:15px;padding:16px 18px;border-radius:13px;background:#f2f7fb;color:#4c687e;font-size:12px;line-height:1.8;white-space:pre-wrap}
+.analyst-disclaimer{margin:13px 0 0;color:#8a9aaa;font-size:10px;line-height:1.65}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.report-frame.full{position:fixed;inset:12px;z-index:5000;width:auto;height:auto;min-height:0;aspect-ratio:auto;border-radius:13px;background:#fff}
+.report-frame.full iframe{position:absolute;inset:0;width:100%;height:100%}
+@media(max-width:950px){.insight-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.technology-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.data-insight-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:680px){.dashboard-selector{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.dashboard-tab{font-size:10px;padding:9px;min-height:48px}.dashboard-tab span{width:21px;height:21px;margin-right:4px}.unified-report{aspect-ratio:4/3;min-height:300px}.dashboard-heading{align-items:flex-start}.dashboard-heading .expand{min-height:35px;padding-inline:11px;font-size:10px}.insight-metrics,.technology-grid,.data-insight-grid{grid-template-columns:1fr}.metric-card{min-height:110px}.analyst-panel{padding:18px}.analyst-form{flex-direction:column}.analyst-form button{height:43px}}
+
+
+/* HealthScope Data Assistant — refreshed answer presentation */
+.analyst-panel{max-width:980px;padding:30px;background:linear-gradient(145deg,#ffffff 0%,#f7fbff 100%);border:1px solid rgba(38,112,157,.13);box-shadow:0 20px 55px rgba(27,74,112,.10)}
+.analyst-header{padding-bottom:21px}
+.analyst-avatar{width:50px;height:50px;border-radius:16px;box-shadow:0 8px 22px rgba(23,111,174,.2)}
+.analyst-header strong{font-size:15px}
+.analyst-header small{font-size:11px}
+.analyst-form{margin-top:22px;gap:11px}
+.analyst-form input{height:56px;padding:0 19px;border-radius:15px;font-size:14px;background:#fff}
+.analyst-form input::placeholder{color:#91a3b3}
+.analyst-form button{min-width:112px;border-radius:15px;font-size:13px;background:linear-gradient(120deg,#176fae,#124d79);box-shadow:0 9px 22px rgba(23,111,174,.20)}
+.analyst-answer{position:relative;margin-top:20px;padding:25px 27px 25px 30px;min-height:105px;border:1px solid #d6e8f4;border-left:5px solid #2387bd;border-radius:17px;background:linear-gradient(135deg,#eef7fd 0%,#f8fbff 58%,#edf5fb 100%);color:#234b68;font-size:15px;line-height:1.95;white-space:pre-wrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 10px 26px rgba(30,91,132,.07)}
+.analyst-answer::before{content:"DATA INSIGHT";display:block;margin-bottom:9px;color:#176fae;font-size:10px;font-weight:900;letter-spacing:.15em}
+.analyst-disclaimer{font-size:11px;line-height:1.75}
+@media(max-width:680px){.analyst-panel{padding:19px}.analyst-form input{height:52px;font-size:13px}.analyst-answer{padding:20px;font-size:14px;line-height:1.85}}
+
+/* =====================================================
+   RESPONSIVE TABLET
+===================================================== */
+
+@media (max-width: 950px) {
+  .hero-grid {
+    grid-template-columns: 1fr .8fr;
+    gap: 25px;
+  }
+
+  .hero-side {
+    min-height: 330px;
+  }
+
+  .index-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .method-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .chart-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .info-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .silver-ring {
+    width: 68vw;
+    left: 82%;
+  }
+}
+
+/* =====================================================
+   RESPONSIVE MOBILE
+===================================================== */
+
+@media (max-width: 680px) {
+  :root {
+    --nav-height: 66px;
+  }
+
+  .wrap {
+    width: min(calc(100% - 30px), var(--content-width));
+  }
+
+  section {
+    padding: 68px 0;
+  }
+
+  .nav {
+    min-height: 66px;
+  }
+
+  .menu {
+    display: inline-flex;
+  }
+
+  .navlinks {
+    position: absolute;
+    top: 66px;
+    left: 0;
+    right: 0;
+    display: none;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 18px;
+    padding: 22px 25px 25px;
+    border-bottom: 1px solid rgba(255,255,255,.9);
+    background: rgba(248,250,252,.97);
+    box-shadow: 0 18px 35px rgba(55,85,110,.10);
+  }
+
+  .navlinks.open {
+    display: flex;
+  }
+
+  .navlinks a {
+    font-size: 13px;
+  }
+
+  .hero {
+    min-height: auto;
+    padding: 70px 0 85px;
+  }
+
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: 34px;
+  }
+
+  .hero h1 {
+    font-size: clamp(43px, 12vw, 62px);
+  }
+
+  .hero-copy {
+    font-size: 14px;
+  }
+
+  .hero-side {
+    min-height: 250px;
+    justify-content: flex-start;
+  }
+
+  .hero-note {
+    width: 100%;
+    padding: 23px;
+  }
+
+  .hero-stats {
+    gap: 23px;
+  }
+
+  .stat strong {
+    font-size: 23px;
+  }
+
+  .scroll-cue {
+    bottom: 18px;
+  }
+
+  .section-head,
+  .index-intro {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .index-grid,
+  .overview-grid,
+  .chart-grid,
+  .method-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .index-card {
+    min-height: 150px;
+  }
+
+  .overview-card {
+    padding: 23px;
+  }
+
+  .info-panel {
+    padding: 22px;
+  }
+
+  .info-points {
+    grid-template-columns: 1fr;
+  }
+
+  .info-point {
+    min-height: auto;
+  }
+
+  .report-section {
+    padding-top: 48px;
+  }
+
+  .report-top {
+    align-items: flex-start;
+  }
+
+  .report-top h3 {
+    font-size: 17px;
+  }
+
+  .report-top .expand {
+    min-height: 35px;
+    padding-inline: 11px;
+    font-size: 10px;
+    white-space: nowrap;
+  }
+
+  .report-frame {
+    min-height: 260px;
+    aspect-ratio: 4 / 3;
+  }
+
+  .placeholder {
+    min-height: 260px;
+    padding: 20px;
+  }
+
+  .closing-panel {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 27px;
+  }
+
+  .footer-inner {
+    flex-direction: column;
+  }
+
+  .dots {
+    right: 7px;
+    gap: 8px;
+  }
+
+  .silver-ring {
+    width: 100vw;
+    left: 94%;
+    opacity: .40;
+  }
+
+  .background-veil {
+    background: rgba(248,250,252,.55);
+  }
+}
+
+/* =====================================================
+   ACCESSIBILITY: REDUCED MOTION
+===================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+/* =====================================================
+   HEALTHCARE VISUAL EXPERIENCE
+===================================================== */
+
+.hero-side.visual-stage {
+  position: relative;
+  min-height: 510px;
+  display: block;
+  overflow: visible;
+  perspective: 1100px;
+}
+
+/* Ambient light behind the visuals */
+
+.visual-stage::before {
+  content: "";
+  position: absolute;
+  width: 440px;
+  height: 440px;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(107,178,211,.18),
+    rgba(146,158,210,.08) 42%,
+    transparent 72%
+  );
+  transform: translate(-50%,-50%);
+  filter: blur(12px);
+}
+
+/* Decorative orbit lines */
+
+.visual-orbit {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  border: 1px solid rgba(111,155,185,.15);
+  pointer-events: none;
+  transform: translate(-50%,-50%);
+}
+
+.orbit-large {
+  width: 390px;
+  height: 250px;
+  transform: translate(-50%,-50%) rotate(-24deg);
+}
+
+.orbit-small {
+  width: 290px;
+  height: 190px;
+  transform: translate(-50%,-50%) rotate(35deg);
+}
+
+/* Individual healthcare visuals */
+
+.health-visual {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  will-change: transform;
+  transition: filter .4s ease;
+  filter: drop-shadow(0 18px 25px rgba(60,100,140,.13));
+}
+
+.health-visual svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Each visual has its own initial position */
+
+.dna-visual {
+  width: 78px;
+  height: 120px;
+  top: 10%;
+  left: 13%;
+}
+
+.heart-visual {
+  width: 105px;
+  height: 105px;
+  top: 15%;
+  right: 12%;
+}
+
+.plus-visual {
+  width: 65px;
+  height: 65px;
+  top: 48%;
+  left: 7%;
+}
+
+.wave-visual {
+  width: 155px;
+  height: 80px;
+  bottom: 13%;
+  left: 15%;
+}
+
+.earth-visual {
+  width: 120px;
+  height: 120px;
+  bottom: 9%;
+  right: 9%;
+}
+
+/* Subtle movement only.
+   No constant spinning or aggressive bouncing. */
+
+.dna-visual {
+  animation: visualFloat 7s ease-in-out infinite;
+}
+
+.heart-visual {
+  animation: visualFloat 8s ease-in-out infinite -2s;
+}
+
+.plus-visual {
+  animation: visualFloat 9s ease-in-out infinite -4s;
+}
+
+.wave-visual {
+  animation: visualFloat 8s ease-in-out infinite -1s;
+}
+
+.earth-visual {
+  animation: visualFloat 9s ease-in-out infinite -3s;
+}
+
+@keyframes visualFloat {
+  0%,100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -9px;
+  }
+}
+
+/* The JavaScript controls scroll scaling.
+   This class prevents the original floating animation
+   from fighting with the scroll transform. */
+
+.visual-stage.scrolling .health-visual {
+  animation-play-state: paused;
+}
+
+/* Mobile layout */
+
+@media(max-width:680px) {
+  .hero-side.visual-stage {
+    min-height: 350px;
+  }
+
+  .visual-stage::before {
+    width: 310px;
+    height: 310px;
+  }
+
+  .orbit-large {
+    width: 290px;
+    height: 190px;
+  }
+
+  .orbit-small {
+    width: 220px;
+    height: 145px;
+  }
+
+  .dna-visual {
+    width: 55px;
+    height: 85px;
+  }
+
+  .heart-visual {
+    width: 76px;
+    height: 76px;
+  }
+
+  .plus-visual {
+    width: 45px;
+    height: 45px;
+  }
+
+  .wave-visual {
+    width: 115px;
+    height: 60px;
+  }
+
+  .earth-visual {
+    width: 85px;
+    height: 85px;
+  }
+}
+/* =====================================================
+   PREMIUM PEARL BACKGROUND — FINAL OVERRIDES
+===================================================== */
+
+body {
+  background:
+    radial-gradient(
+      ellipse at 80% 18%,
+      rgba(126,184,216,.24),
+      transparent 42%
+    ),
+    radial-gradient(
+      ellipse at 15% 75%,
+      rgba(151,157,216,.14),
+      transparent 42%
+    ),
+    linear-gradient(
+      135deg,
+      #eaf1f6 0%,
+      #f2f5f8 45%,
+      #e8eff5 100%
+    );
+}
+
+/* Remove the white ring outlines */
+
+.silver-ring {
+  border: 0;
+  background:
+    radial-gradient(
+      circle at 30% 25%,
+      rgba(255,255,255,.70),
+      rgba(205,218,229,.18) 42%,
+      transparent 70%
+    );
+
+  box-shadow:
+    inset 12px 12px 28px rgba(255,255,255,.42),
+    inset -16px -18px 35px rgba(122,151,175,.13),
+    0 30px 100px rgba(90,125,153,.12);
+}
+
+.silver-ring::before {
+  border: 0;
+  box-shadow: none;
+}
+
+.silver-ring::after {
+  border: 0;
+  filter: none;
+}
+
+/* Remove harsh white card outlines */
+
+.panel,
+.index-card,
+.info-point,
+.overview-card,
+.report-frame,
+.hero-note,
+.closing-panel {
+  border-color: transparent;
+}
+
+/* Reduce the frosted white appearance */
+
+.panel,
+.index-card,
+.info-point,
+.overview-card {
+  background: rgba(235,243,249,.54);
+}
+
+/* Make the dashboard area slightly more defined */
+
+.report-frame {
+  background: rgba(231,239,246,.72);
+  box-shadow: 0 20px 55px rgba(50,83,112,.10);
+}
+
+/* Softer navigation */
+
+.topbar {
+  background: rgba(238,244,249,.78);
+  border-bottom-color: transparent;
+}
+
+/* Reduce the white veil over the background */
+
+.background-veil {
+  background: linear-gradient(
+    90deg,
+    rgba(239,245,249,.48),
+    rgba(239,245,249,.23) 55%,
+    rgba(239,245,249,.12)
+  );
+}
+
+/* =========================================================
+   HEALTHSCOPE — WHITE / MEDICAL RED / CLINICAL BLUE THEME
+   Balanced palette: white is dominant, red is the medical accent,
+   blue provides depth and contrast.
+========================================================= */
+:root {
+  --page: #f7fbff;
+  --page-soft: #edf5fb;
+  --white: #ffffff;
+  --surface: rgba(255,255,255,.78);
+  --surface-strong: rgba(255,255,255,.94);
+  --ink: #17324b;
+  --ink-soft: #34536e;
+  --muted: #6d8295;
+  --blue: #176fae;
+  --blue-dark: #10578d;
+  --cyan: #48a9c7;
+  --lavender: #8ca8d4;
+  --line: rgba(27,74,112,.10);
+  --shadow: 0 18px 48px rgba(29,65,98,.08);
+  --shadow-hover: 0 22px 58px rgba(29,65,98,.13);
+}
+
+html, body {
+  background: #f5faff !important;
+}
+body {
+  color: #17324b;
+  background:
+    radial-gradient(ellipse at 10% 8%, rgba(215,235,250,.82), transparent 38%),
+    radial-gradient(ellipse at 90% 22%, rgba(221,239,250,.54), transparent 34%),
+    radial-gradient(ellipse at 48% 88%, rgba(231,241,250,.72), transparent 44%),
+    linear-gradient(135deg, #fbfdff 0%, #eef6fc 52%, #f7fbff 100%) !important;
+}
+.background-stage, .background-veil { display: none !important; }
+.progress {
+  background: linear-gradient(90deg, #1a78b8, #e02d45, #f08a98) !important;
+}
+
+/* Persistent full-site visual layer */
+.healthcare-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  isolation: isolate;
+  background: transparent;
+}
+.page-layer { position: relative; z-index: 2; }
+
+.ambient-glow {
+  position: absolute;
+  width: 42vw; height: 42vw;
+  min-width: 280px; min-height: 280px;
+  border-radius: 50%;
+  filter: blur(62px);
+  opacity: .30;
+  animation: ambientDrift 24s ease-in-out infinite alternate;
+}
+.glow-one { top: -18%; right: -12%; background: rgba(62,145,199,.20); }
+.glow-two { bottom: -22%; left: -14%; background: rgba(232,65,85,.14); animation-delay: -9s; }
+
+/* Large translucent medical cross — a background motif, not a card */
+.ambient-cross {
+  position: absolute;
+  width: clamp(210px, 31vw, 470px);
+  height: clamp(210px, 31vw, 470px);
+  top: 34%;
+  left: 50%;
+  opacity: .075;
+  transform: translate(-50%,-50%) scale(var(--ambient-zoom, 1)) rotate(-8deg);
+  transform-origin: center;
+  transition: opacity .35s ease;
+}
+.ambient-cross::before,
+.ambient-cross::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  border-radius: 24px;
+  background: linear-gradient(145deg, #e32943, #b91f39);
+}
+.ambient-cross::before { width: 28%; height: 100%; }
+.ambient-cross::after { width: 100%; height: 28%; }
+
+/* Subtle DNA, heart, ECG, medical pluses and motion particles */
+.ambient-dna {
+  position: absolute;
+  width: clamp(55px, 6vw, 88px);
+  height: clamp(130px, 19vw, 230px);
+  top: 13%; left: 4%;
+  opacity: .14;
+  animation: dnaDrift 19s ease-in-out infinite;
+}
+.ambient-dna svg { width: 100%; height: 100%; }
+.ambient-heart {
+  position: absolute;
+  width: clamp(62px, 7vw, 100px);
+  right: 6%; top: 22%;
+  opacity: .15;
+  animation: heartBeat 3.8s ease-in-out infinite;
+}
+.ambient-heart svg { width: 100%; height: auto; }
+.ambient-plus {
+  position: absolute;
+  color: #d52b43;
+  font-family: Arial,sans-serif;
+  font-weight: 400;
+  line-height: 1;
+  opacity: .15;
+  animation: plusFloat 13s ease-in-out infinite;
+}
+.plus-one { top: 58%; left: 8%; font-size: clamp(48px,6vw,82px); }
+.plus-two { right: 16%; bottom: 12%; font-size: clamp(34px,4vw,60px); animation-delay: -5s; }
+.ambient-ecg {
+  position: absolute;
+  width: min(32vw,390px);
+  min-width: 210px;
+  right: 3%; bottom: 8%;
+  opacity: .15;
+  animation: ecgGlow 5s ease-in-out infinite;
+}
+.ambient-ecg svg { width: 100%; height: auto; }
+.ambient-orbit {
+  position: absolute;
+  width: min(36vw,500px);
+  aspect-ratio: 1;
+  border: 1px solid rgba(37,111,165,.10);
+  border-radius: 50%;
+  animation: orbitDrift 42s linear infinite;
+}
+.orbit-a { top: 30%; right: -15%; }
+.orbit-b { bottom: -36%; left: 24%; width: min(28vw,370px); animation-direction: reverse; }
+.ambient-particle {
+  position: absolute;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #d52b43;
+  opacity: .20;
+  box-shadow: 0 0 20px rgba(213,43,67,.35);
+  animation: particleRise 15s ease-in-out infinite;
+}
+.particle-a { top: 35%; left: 31%; }
+.particle-b { top: 72%; left: 72%; animation-delay: -5s; }
+.particle-c { top: 18%; right: 31%; animation-delay: -9s; }
+
+@keyframes ambientDrift {
+  from { transform: translate3d(-3%,-2%,0) scale(.94); }
+  to { transform: translate3d(5%,6%,0) scale(1.07); }
+}
+@keyframes dnaDrift {
+  0%,100% { transform: translateY(0) rotate(-6deg); }
+  50% { transform: translateY(20px) rotate(6deg); }
+}
+@keyframes heartBeat {
+  0%,82%,100% { transform: scale(1); }
+  86% { transform: scale(1.10); }
+  90% { transform: scale(.98); }
+  94% { transform: scale(1.05); }
+}
+@keyframes plusFloat {
+  0%,100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(-20px) rotate(10deg); }
+}
+@keyframes ecgGlow { 0%,100% { opacity:.11; } 50% { opacity:.23; } }
+@keyframes orbitDrift { from { rotate:0deg; } to { rotate:360deg; } }
+@keyframes particleRise {
+  0%,100% { translate:0 0; opacity:.12; }
+  50% { translate:18px -28px; opacity:.30; }
+}
+
+/* Bright, clean surfaces — no outlines or white card borders */
+.panel,
+.index-card,
+.info-panel,
+.info-point,
+.overview-card,
+.insight,
+.method,
+.closing-panel,
+.report-frame,
+.hero-note,
+.eyebrow,
+.secondary-link {
+  border: 0 !important;
+  outline: 0 !important;
+  background: rgba(255,255,255,.76) !important;
+  box-shadow: 0 14px 38px rgba(35,73,108,.075) !important;
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+}
+.info-panel.panel {
+  background: linear-gradient(125deg, rgba(255,255,255,.90), rgba(239,247,253,.86)) !important;
+}
+.info-point {
+  background: rgba(238,246,252,.88) !important;
+  box-shadow: none !important;
+}
+.index-card:hover, .panel:hover {
+  box-shadow: 0 20px 48px rgba(35,73,108,.12) !important;
+}
+.report-frame {
+  background: #fff !important;
+  box-shadow: 0 14px 38px rgba(35,73,108,.07) !important;
+}
+.report-frame iframe { border: 0 !important; background: #fff; }
+.closing-panel {
+  background: linear-gradient(120deg, rgba(255,255,255,.96), rgba(235,245,252,.94)) !important;
+}
+.topbar {
+  background: rgba(255,255,255,.88) !important;
+  border: 0 !important;
+  box-shadow: 0 7px 26px rgba(29,65,98,.055) !important;
+}
+.navlinks a, .brand-name { color: #24445f !important; }
+.brand-name small { color: #71899e !important; }
+.brand-mark { background: linear-gradient(140deg,#e94a60,#b91f39) !important; }
+.hero h1, .section-head h2, .index-intro h2, .info-panel h2,
+.report-top h3, .overview-card h3, .insight h3, .method h3,
+.closing h2, .placeholder h3 { color: #193750 !important; }
+.hero-copy, .section-head > p, .index-intro p, .info-panel p,
+.overview-card p, .insight p, .method p, .closing p,
+.report-top p, .info-point span { color: #6d8295 !important; }
+.kicker, .index-icon, .insight .icon, .method > span,
+.info-point strong, .placeholder .symbol { color: #c52a42 !important; }
+.gradient {
+  background: linear-gradient(100deg,#bd203b,#e34b60,#287eb5) !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+}
+.primary-link, .expand {
+  background: linear-gradient(120deg,#d9344d,#b91f39) !important;
+  box-shadow: 0 9px 22px rgba(185,31,57,.18) !important;
+}
+.pill {
+  color: #176fae !important;
+  border: 0 !important;
+  background: rgba(37,126,181,.09) !important;
+}
+.navlinks a::after { background: #d52b43 !important; }
+.dots a.active { background: #d52b43 !important; box-shadow: 0 0 10px rgba(213,43,67,.3) !important; }
+.footer { color:#71899e !important; border:0 !important; }
+
+/* =========================================================
+   GLOBAL EARTH — CENTERED BEHIND EVERY WEBSITE SECTION
+========================================================= */
+.global-earth-wrap {
+  position:absolute;
+  width:min(48vw, 650px);
+  aspect-ratio:1;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  display:grid;
+  place-items:center;
+  opacity:.19;
+  transform-origin:center;
+  will-change:transform;
+}
+.global-earth {
+  position:relative;
+  width:100%;
+  aspect-ratio:1;
+  border-radius:50%;
+  filter:drop-shadow(0 25px 45px rgba(31,91,132,.16));
+  animation:globalEarthFloat 12s ease-in-out infinite;
+}
+.global-earth-map {
+  width:100%;height:100%;display:block;
+  overflow:visible;
+}
+.global-earth-map circle:first-of-type {
+  filter:drop-shadow(0 0 28px rgba(57,139,190,.18));
+}
+.global-india-pin {
+  position:absolute;
+  left:67%;
+  top:48%;
+  width:14px;height:14px;
+  border:3px solid white;
+  border-radius:50%;
+  background:#e3344d;
+  box-shadow:0 0 0 7px rgba(227,52,77,.16),0 0 22px rgba(227,52,77,.45);
+  animation:globalPinPulse 2s ease-out infinite;
+}
+.global-earth-orbit {
+  position:absolute;
+  width:112%;height:39%;
+  left:50%;top:50%;
+  border:1.5px solid rgba(40,117,169,.18);
+  border-radius:50%;
+  transform:translate(-50%,-50%) rotate(-23deg);
+}
+.orbit-global-one { animation:globalOrbit 34s linear infinite; }
+.orbit-global-two {
+  width:120%;height:52%;
+  border-color:rgba(218,55,77,.12);
+  transform:translate(-50%,-50%) rotate(28deg);
+  animation:globalOrbitReverse 45s linear infinite;
+}
+.global-india-callout {
+  position:absolute;
+  left:68%;top:47%;
+  display:flex;align-items:center;gap:7px;
+  padding:7px 10px;
+  color:#fff;
+  border-radius:20px;
+  background:rgba(190,37,58,.88);
+  box-shadow:0 6px 18px rgba(104,29,43,.13);
+  font-size:9px;
+  letter-spacing:.08em;
+  white-space:nowrap;
+}
+.global-india-callout small { opacity:.82;letter-spacing:0;font-weight:500; }
+.callout-pulse {
+  width:6px;height:6px;border-radius:50%;background:#fff;
+  box-shadow:0 0 0 4px rgba(255,255,255,.18);
+}
+@keyframes globalEarthFloat {
+  0%,100% { transform:translateY(0) rotate(-1deg); }
+  50% { transform:translateY(-12px) rotate(1deg); }
+}
+@keyframes globalPinPulse {
+  0% { box-shadow:0 0 0 0 rgba(227,52,77,.35),0 0 18px rgba(227,52,77,.4); }
+  100% { box-shadow:0 0 0 17px rgba(227,52,77,0),0 0 18px rgba(227,52,77,.4); }
+}
+@keyframes globalOrbit { from { rotate:0deg; } to { rotate:360deg; } }
+@keyframes globalOrbitReverse { from { rotate:360deg; } to { rotate:0deg; } }
+
+/* Homepage: animated clinician presenting and exploring healthcare analytics */
+.hero-side.visual-stage {
+  min-height:540px !important;
+  position:relative;
+  display:block;
+  overflow:visible;
+  isolation:isolate;
+}
+.hero-doctor-scene {
+  position:absolute;inset:0;
+  min-height:500px;
+  isolation:isolate;
+}
+.doctor-scene-glow {
+  position:absolute;
+  width:390px;height:390px;
+  left:50%;top:52%;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(67,151,201,.18),rgba(225,239,249,.10) 55%,transparent 73%);
+  filter:blur(8px);
+}
+.doctor-monitor {
+  position:absolute;
+  width:66%;height:225px;
+  right:1%;top:18%;
+  padding:12px;
+  border:1px solid rgba(64,120,158,.12);
+  border-radius:17px;
+  background:rgba(255,255,255,.88);
+  box-shadow:0 22px 55px rgba(34,82,119,.14);
+  animation:monitorFloat 6s ease-in-out infinite;
+}
+.monitor-top {
+  display:flex;align-items:center;gap:5px;
+  height:19px;padding-bottom:8px;
+  border-bottom:1px solid #e8f0f6;
+}
+.monitor-top i { width:6px;height:6px;border-radius:50%;background:#e35b6d; }
+.monitor-top i:nth-child(2) { background:#eab45b; }
+.monitor-top i:nth-child(3) { background:#67b9a0; }
+.monitor-top span { margin-left:7px;color:#7890a3;font-size:8px;font-weight:700; }
+.monitor-content { display:grid;grid-template-columns:1.4fr .8fr;gap:12px;padding-top:13px; }
+.chart-title { color:#45647c;font-size:9px;font-weight:800; }
+.monitor-chart svg { width:100%;margin-top:6px; }
+.monitor-stats { display:flex;flex-direction:column;gap:12px;justify-content:center; }
+.monitor-stats b { color:#176fae;font-size:17px; }
+.monitor-stats small { display:block;color:#8a9dac;font-size:8px;font-weight:600; }
+.doctor-person {
+  position:absolute;
+  z-index:3;
+  width:205px;height:315px;
+  left:9%;bottom:1%;
+  animation:doctorSway 5.5s ease-in-out infinite;
+  transform-origin:50% 90%;
+}
+.doctor-head {
+  position:absolute;z-index:4;
+  width:83px;height:100px;
+  top:0;left:59px;
+}
+.doctor-face {
+  position:absolute;inset:14px 7px 0;
+  border-radius:45% 45% 43% 43%;
+  background:linear-gradient(135deg,#e9b995,#c98262);
+  box-shadow:inset -7px -3px 0 rgba(133,73,54,.08);
+}
+.doctor-hair {
+  position:absolute;z-index:2;
+  top:5px;left:7px;width:70px;height:39px;
+  border-radius:48% 48% 20% 20%;
+  background:#263d52;
+  transform:rotate(-5deg);
+}
+.doctor-hair::after {
+  content:"";position:absolute;right:-3px;top:17px;width:17px;height:37px;
+  border-radius:0 12px 12px 0;background:#263d52;
+}
+.doctor-eye {
+  position:absolute;top:43px;left:19px;width:5px;height:3px;
+  border-radius:50%;background:#3a2930;
+}
+.doctor-eye.second { left:48px; }
+.doctor-smile {
+  position:absolute;left:31px;top:62px;width:13px;height:6px;
+  border-bottom:2px solid #9c4f4e;border-radius:50%;
+}
+.doctor-neck {
+  position:absolute;z-index:2;top:82px;left:91px;width:25px;height:28px;
+  background:#d49a78;
+}
+.doctor-coat {
+  position:absolute;top:101px;left:27px;width:151px;height:205px;
+  border-radius:42px 42px 10px 10px;
+  background:linear-gradient(100deg,#fff 0%,#e9f2f8 54%,#fff 100%);
+  box-shadow:0 18px 35px rgba(37,80,111,.16);
+  overflow:hidden;
+}
+.coat-shirt {
+  position:absolute;top:0;left:53px;width:45px;height:115px;
+  background:#4c91b8;
+  clip-path:polygon(0 0,100% 0,76% 100%,50% 78%,24% 100%);
+}
+.coat-lapel {
+  position:absolute;top:0;width:49px;height:100px;
+  background:#fff;border:1px solid #d9e5ed;
+}
+.coat-lapel.left { left:19px;clip-path:polygon(0 0,100% 0,65% 100%,40% 68%); }
+.coat-lapel.right { right:19px;clip-path:polygon(0 0,100% 0,60% 68%,35% 100%); }
+.coat-pocket {
+  position:absolute;right:19px;top:87px;width:24px;height:31px;
+  border:1px solid #b8cbd9;border-radius:3px;color:#d52b43;text-align:center;
+  font-size:16px;font-weight:800;
+}
+.doctor-arm {
+  position:absolute;z-index:5;top:150px;left:116px;
+  width:86px;height:25px;border-radius:18px;
+  background:linear-gradient(90deg,#f5fbff,#dceaf3);
+  transform:rotate(-24deg);
+  transform-origin:10px 50%;
+  animation:doctorArmMove 4.4s ease-in-out infinite;
+  box-shadow:0 5px 12px rgba(35,75,104,.12);
+}
+.doctor-hand {
+  position:absolute;right:-10px;top:3px;width:22px;height:18px;
+  border-radius:50%;background:#d69b79;
+}
+.doctor-tablet {
+  position:absolute;z-index:6;left:137px;top:143px;
+  width:57px;height:73px;border:4px solid #3b647f;border-radius:8px;
+  background:#e7f3fa;transform:rotate(13deg);
+  box-shadow:0 9px 18px rgba(31,75,107,.18);
+}
+.doctor-tablet span,.doctor-tablet i,.doctor-tablet b {
+  position:absolute;left:8px;right:8px;height:4px;border-radius:4px;background:#70a8c7;
+}
+.doctor-tablet span { top:13px;width:25px; }
+.doctor-tablet i { top:26px; }
+.doctor-tablet b { top:39px;right:17px;background:#e45b70; }
+.doctor-data-card {
+  position:absolute;z-index:5;
+  padding:13px 15px;
+  border-radius:13px;
+  background:rgba(255,255,255,.92);
+  box-shadow:0 12px 28px rgba(36,79,111,.12);
+  border:1px solid rgba(54,113,153,.08);
+}
+.data-card-one { left:0;top:8%;width:142px;animation:cardFloat 7s ease-in-out infinite; }
+.data-card-two { right:0;bottom:8%;width:130px;animation:cardFloat 6s ease-in-out infinite -2s; }
+.data-card-label { display:block;color:#64839a;font-size:8px;font-weight:800;letter-spacing:.08em; }
+.data-card-two strong { display:block;margin-top:8px;color:#176fae;font-size:22px; }
+.data-card-one small { display:block;margin-top:7px;color:#8ca0af;font-size:8px; }
+.mini-bars { display:flex;align-items:end;gap:5px;height:28px;margin-top:8px; }
+.mini-bars i { width:12px;border-radius:3px 3px 0 0;background:#7cb6d5; }
+.mini-bars i:nth-child(1){height:40%}.mini-bars i:nth-child(2){height:70%;background:#e66b7b}
+.mini-bars i:nth-child(3){height:55%}.mini-bars i:nth-child(4){height:95%;background:#e66b7b}
+.mini-bars i:nth-child(5){height:78%}
+.mini-line { height:4px;margin-top:9px;border-radius:4px;background:#e8f0f5;overflow:hidden; }
+.mini-line i { display:block;width:78%;height:100%;border-radius:4px;background:#e05268; }
+.scene-medical-plus {
+  position:absolute;right:14%;top:4%;
+  color:#d52b43;font-size:54px;font-weight:300;opacity:.72;
+  animation:plusFloat 7s ease-in-out infinite;
+}
+.scene-pulse-dot {
+  position:absolute;left:38%;top:17%;
+  width:10px;height:10px;border-radius:50%;background:#e34b60;
+  box-shadow:0 0 0 7px rgba(227,75,96,.10);
+  animation:markerPulse 2s ease-out infinite;
+}
+.scene-caption {
+  position:absolute;right:3%;bottom:2%;
+  display:flex;align-items:center;gap:7px;
+  color:#6e8ba0;font-size:8px;font-weight:800;letter-spacing:.13em;
+}
+.scene-caption span { width:7px;height:7px;border-radius:50%;background:#d52b43; }
+@keyframes doctorSway { 0%,100%{transform:translateY(0) rotate(-1deg)} 50%{transform:translateY(-7px) rotate(1deg)} }
+@keyframes doctorArmMove { 0%,100%{transform:rotate(-24deg)} 50%{transform:rotate(-12deg)} }
+@keyframes monitorFloat { 0%,100%{translate:0 0} 50%{translate:0 -8px} }
+@keyframes cardFloat { 0%,100%{translate:0 0} 50%{translate:0 -10px} }
+@keyframes markerPulse { 0%{box-shadow:0 0 0 0 rgba(227,75,96,.35)} 100%{box-shadow:0 0 0 16px rgba(227,75,96,0)} }
+
+@media(max-width:950px) {
+  .global-earth-wrap { width:min(64vw,600px); }
+  .doctor-person { left:5%;transform:scale(.88);transform-origin:bottom left; }
+}
+@media(max-width:680px) {
+  .global-earth-wrap { width:88vw; opacity:.13; }
+  .global-india-callout { font-size:8px;left:66%; }
+  .hero-side.visual-stage { min-height:440px !important; }
+  .hero-doctor-scene { min-height:420px;transform:scale(.86);transform-origin:top center; }
+  .doctor-person { left:4%;bottom:0; }
+  .doctor-monitor { width:64%;right:0;top:22%; }
+  .data-card-one { left:0;top:8%; }
+  .data-card-two { right:0;bottom:3%; }
+  .scene-caption { right:0;bottom:-2%; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .global-earth,.global-earth-orbit,.global-india-pin,.doctor-person,
+  .doctor-arm,.doctor-monitor,.doctor-data-card,.scene-medical-plus {
+    animation:none !important;
+  }
+}
+
+/* Scroll-linked, bounded zoom of the full-site cross and ambient layer */
+@media (max-width:680px) {
+  .ambient-cross { width:240px; height:240px; top:44%; opacity:.055; }
+  .ambient-dna { left:-2%; top:17%; opacity:.10; }
+  .ambient-heart { right:-1%; top:28%; opacity:.11; }
+  .ambient-ecg { right:-8%; bottom:8%; width:55vw; opacity:.11; }
+  .plus-one { left:3%; top:58%; }
+  .plus-two { right:8%; bottom:18%; }
+  .hero-side.visual-stage { min-height:390px !important; }
+  .hero-globe { width:min(285px,72%); }
+  .globe-orbit { width:95%; height:34%; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .healthcare-ambient *, .healthcare-ambient *::before, .healthcare-ambient *::after,
+  .hero-globe, .globe-map, .globe-orbit, .india-marker {
+    animation:none !important;
+  }
+}
+
+
+/* =========================================================
+   FINAL REPORT INTRO / POWER BI SURFACE ADJUSTMENT
+   Intro panels are transparent; only report viewing areas are white.
+========================================================= */
+.info-section,
+.info-section .wrap {
+  background: transparent !important;
+}
+
+.info-section .info-panel,
+.info-section .info-panel.panel {
+  background: transparent !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.info-section .info-panel::before,
+.info-section .info-panel::after {
+  content: none !important;
+  display: none !important;
+}
+
+.info-section .info-points {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.info-section .info-point {
+  background: rgba(255,255,255,.30) !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* White/light canvas is reserved for the actual Power BI report section. */
+.report-section,
+.report-section .wrap {
+  background: transparent !important;
+}
+.report-section .report-frame,
+.report-section .report-frame.panel {
+  background: rgba(255,255,255,.94) !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: 0 12px 36px rgba(36,78,111,.07) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  overflow: hidden;
+}
+.report-section .report-frame iframe {
+  display: block;
+  width: 100%;
+  border: 0 !important;
+  background: #fff !important;
+}
+.report-section .report-frame .placeholder {
+  background: rgba(255,255,255,.96) !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+
+/* FINAL READABILITY: transparent report intro, visible info tiles, darker text */
+.info-section .info-panel,
+.info-section .info-panel.panel {
+  background: transparent !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+.info-section .info-points {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+.info-section .info-point {
+  background: rgba(255,255,255,.82) !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: 0 8px 24px rgba(31,75,108,.055) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.info-section .info-point strong {
+  color: #173b58 !important;
+  font-weight: 800 !important;
+}
+.info-section .info-point span {
+  color: #405f78 !important;
+  font-weight: 500 !important;
+}
+.info-section .info-panel h2 {
+  color: #15344e !important;
+}
+.info-section .info-panel p {
+  color: #385873 !important;
+}
+.info-section .info-panel .kicker {
+  color: #c52640 !important;
+}
+
+
+
+/* =====================================================
+   HEALTHSCOPE — DEEP SPACE / GALACTIC THEME
+   Added as a final override so the original layout,
+   report embeds and interactions remain intact.
+===================================================== */
+:root {
+  --page:#030a18 !important;
+  --page-soft:#07152a !important;
+  --white:#f4f9ff !important;
+  --surface:rgba(10,25,48,.72) !important;
+  --surface-strong:rgba(12,31,58,.92) !important;
+  --ink:#f4f8ff !important;
+  --ink-soft:#c5d7ee !important;
+  --muted:#91a9c7 !important;
+  --blue:#55b9ff !important;
+  --blue-dark:#247fd0 !important;
+  --cyan:#55e5f2 !important;
+  --lavender:#a99aff !important;
+  --line:rgba(125,190,255,.16) !important;
+  --shadow:0 20px 65px rgba(0,0,0,.30) !important;
+  --shadow-hover:0 28px 75px rgba(0,0,0,.42) !important;
+}
+html { background:#030a18 !important; scroll-behavior:smooth; }
+body {
+  color:#f4f8ff !important;
+  background:
+    radial-gradient(ellipse at 12% 12%,rgba(24,91,160,.25),transparent 34%),
+    radial-gradient(ellipse at 88% 24%,rgba(91,57,174,.20),transparent 32%),
+    radial-gradient(ellipse at 52% 78%,rgba(0,139,173,.13),transparent 36%),
+    linear-gradient(145deg,#020713 0%,#061329 48%,#030918 100%) !important;
+  background-attachment:fixed !important;
+}
+body::before {
+  content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+  opacity:.52;
+  background-image:
+    radial-gradient(1px 1px at 8% 14%,#fff 98%,transparent),
+    radial-gradient(1.5px 1.5px at 19% 72%,#9edfff 98%,transparent),
+    radial-gradient(1px 1px at 31% 28%,#fff 98%,transparent),
+    radial-gradient(2px 2px at 46% 83%,#b5aaff 98%,transparent),
+    radial-gradient(1px 1px at 58% 12%,#fff 98%,transparent),
+    radial-gradient(1.5px 1.5px at 72% 58%,#8bdfff 98%,transparent),
+    radial-gradient(1px 1px at 84% 19%,#fff 98%,transparent),
+    radial-gradient(1px 1px at 93% 77%,#b6caff 98%,transparent);
+  background-size:310px 260px,370px 330px,430px 360px,510px 410px,390px 300px,470px 370px,350px 290px,540px 430px;
+}
+.page-layer { position:relative; z-index:2; }
+.healthcare-ambient { z-index:1 !important; }
+.healthcare-ambient::before {
+  content:""; position:absolute; inset:-10%; pointer-events:none;
+  opacity:.55;
+  background:
+    radial-gradient(ellipse at 70% 30%,rgba(42,132,219,.17),transparent 35%),
+    radial-gradient(ellipse at 25% 75%,rgba(113,76,220,.13),transparent 36%);
+}
+.healthcare-ambient .glow-one { background:rgba(35,135,231,.32) !important; opacity:.42 !important; }
+.healthcare-ambient .glow-two { background:rgba(111,72,220,.26) !important; opacity:.36 !important; }
+
+/* Navigation */
+.topbar {
+  background:rgba(3,12,28,.72) !important;
+  border-bottom:1px solid rgba(105,190,255,.18) !important;
+  box-shadow:0 10px 35px rgba(0,0,0,.22) !important;
+  backdrop-filter:blur(24px) saturate(150%) !important;
+  -webkit-backdrop-filter:blur(24px) saturate(150%) !important;
+}
+.brand, .brand-name, .brand span { color:#f5f9ff !important; }
+.brand-mark {
+  background:linear-gradient(140deg,#4dd9f0,#357ee8 58%,#927cff) !important;
+  box-shadow:0 0 24px rgba(65,188,255,.32) !important;
+}
+.navlinks a, .nav a, .menu, .menu-button {
+  color:#d9eaff !important;
+}
+.navlinks a:hover, .nav a:hover { color:#63e7f3 !important; }
+.navlinks a::after { background:linear-gradient(90deg,#53e5f1,#7d8dff) !important; }
+.menu { border-color:rgba(125,190,255,.22) !important; background:rgba(13,34,62,.75) !important; }
+
+/* Main typography */
+h1,h2,h3,h4,h5,h6,
+.section-title,.hero-title,.hero h1,.brand-name {
+  color:#f5f9ff !important;
+}
+p, li, .section-description, .hero-description, .eyebrow,
+small, label { color:#b7cbe4; }
+.hero-title, .hero h1 {
+  text-shadow:0 5px 32px rgba(65,163,255,.16);
+}
+.gradient-text, .hero-title span, .hero h1 span {
+  background:linear-gradient(100deg,#f6fbff 0%,#67e4f1 42%,#9e9aff 100%) !important;
+  -webkit-background-clip:text !important;
+  background-clip:text !important;
+  -webkit-text-fill-color:transparent !important;
+}
+.eyebrow, .section-kicker {
+  color:#65ddeb !important;
+  letter-spacing:.15em !important;
+}
+
+/* Panels and report directory */
+.card, .report-card, .feature-card, .insight-card, .metric-card,
+.panel, .content-card, .method-card, .project-card,
+.stat-card, .gallery-card, .overview-card {
+  color:#eaf4ff !important;
+  background:linear-gradient(145deg,rgba(13,34,62,.88),rgba(7,20,41,.82)) !important;
+  border:1px solid rgba(111,190,255,.16) !important;
+  box-shadow:0 18px 48px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.035) !important;
+  backdrop-filter:blur(16px);
+}
+.card p, .report-card p, .feature-card p, .insight-card p,
+.metric-card p, .panel p, .content-card p { color:#a9bfd9 !important; }
+.card:hover, .report-card:hover, .feature-card:hover, .insight-card:hover {
+  border-color:rgba(83,218,240,.42) !important;
+  box-shadow:0 24px 60px rgba(0,0,0,.34),0 0 30px rgba(49,165,231,.10) !important;
+  transform:translateY(-4px);
+}
+hr, .divider { border-color:rgba(120,185,245,.16) !important; }
+
+/* Buttons and links */
+button, .btn, a.btn, .button, .primary-btn {
+  color:#031323 !important;
+  background:linear-gradient(110deg,#63e8ef,#59baff 58%,#9b91ff) !important;
+  border:0 !important;
+  box-shadow:0 9px 28px rgba(47,166,231,.22) !important;
+  font-weight:800 !important;
+}
+button:hover, .btn:hover, a.btn:hover, .button:hover, .primary-btn:hover {
+  filter:brightness(1.10);
+  box-shadow:0 12px 34px rgba(67,190,242,.34) !important;
+}
+.btn-secondary, .secondary-btn, .outline-btn {
+  color:#dff7ff !important;
+  background:rgba(16,43,75,.62) !important;
+  border:1px solid rgba(100,206,245,.32) !important;
+}
+
+/* Hero illustration / monitor */
+.doctor-scene-glow {
+  background:radial-gradient(circle,rgba(48,166,231,.26),rgba(71,90,190,.13) 55%,transparent 73%) !important;
+}
+.doctor-monitor, .floating-card, .hero-float-card,
+.analytics-float, .doctor-data-card {
+  color:#eaf6ff !important;
+  background:rgba(8,25,49,.90) !important;
+  border:1px solid rgba(93,197,245,.24) !important;
+  box-shadow:0 20px 55px rgba(0,0,0,.38) !important;
+}
+.doctor-monitor *, .floating-card *, .hero-float-card *,
+.analytics-float *, .doctor-data-card * { color:inherit; }
+.doctor-monitor p, .floating-card p { color:#a9c7e4 !important; }
+
+/* Globe: deep ocean, glowing continents and orbital grid */
+.global-earth {
+  filter:drop-shadow(0 25px 60px rgba(0,0,0,.42)) drop-shadow(0 0 35px rgba(38,155,235,.18)) !important;
+}
+.global-earth-map circle:first-of-type {
+  stroke:rgba(103,220,255,.72) !important;
+  stroke-width:2px !important;
+  filter:drop-shadow(0 0 16px rgba(55,196,255,.50)) !important;
+}
+#globalOcean stop:first-child { stop-color:#1c6e9f !important; }
+#globalOcean stop:nth-child(2) { stop-color:#0b3c70 !important; }
+#globalOcean stop:last-child { stop-color:#04172f !important; }
+.global-earth-map g[fill="#d8eee4"] {
+  fill:#2c9b9b !important;
+  stroke:#8be8e8 !important;
+  stroke-width:1.2 !important;
+}
+.global-earth-map path { filter:drop-shadow(0 0 3px rgba(75,230,225,.16)); }
+.global-earth-map ellipse {
+  stroke:rgba(108,220,255,.48) !important;
+}
+.global-earth-orbit {
+  border-color:rgba(101,207,255,.35) !important;
+  box-shadow:0 0 22px rgba(61,160,255,.10) !important;
+}
+.global-india-pin {
+  background:#ffcf72 !important;
+  border-color:#fff !important;
+  box-shadow:0 0 0 7px rgba(255,207,114,.17),0 0 25px rgba(255,192,89,.75) !important;
+}
+.ambient-dna, .ambient-heart, .ambient-plus, .ambient-ecg,
+.ambient-orbit, .ambient-particle {
+  filter:hue-rotate(145deg) saturate(1.5) brightness(1.25) !important;
+}
+
+/* Sections, badges, forms and footer */
+section, .section { color:#edf6ff; }
+.badge, .tag, .chip, .report-number {
+  color:#83eaf3 !important;
+  background:rgba(42,148,191,.14) !important;
+  border:1px solid rgba(90,216,235,.20) !important;
+}
+input, textarea, select {
+  color:#edf7ff !important;
+  background:rgba(5,20,40,.86) !important;
+  border:1px solid rgba(117,185,235,.25) !important;
+}
+input::placeholder, textarea::placeholder { color:#829bb8 !important; }
+footer, .footer {
+  color:#a9bfd9 !important;
+  background:rgba(2,9,21,.70) !important;
+  border-top:1px solid rgba(111,190,255,.15) !important;
+}
+footer a, .footer a { color:#6edce9 !important; }
+
+/* Keep Power BI report canvases white for chart legibility */
+iframe, .report-frame, .powerbi-frame, .dashboard-frame {
+  background:#fff !important;
+}
+@media (max-width:900px) {
+  .topbar { background:rgba(3,12,28,.92) !important; }
+  .navlinks { background:rgba(5,18,38,.97) !important; border:1px solid rgba(112,190,245,.18) !important; }
+}
+@media (prefers-reduced-motion:reduce) {
+  *,*::before,*::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; scroll-behavior:auto !important; }
+}
+
+
+
+/* =====================================================
+   ACCESSIBILITY PASS — HIGH-CONTRAST BRIGHT TYPOGRAPHY
+   Keep the dark galactic background, make website copy
+   crisp and readable across every section.
+===================================================== */
+html, body, .page-layer, main, section, .section,
+.topbar, .nav, .hero, .content, .container, footer, .footer {
+  color: #f7fbff !important;
+}
+h1, h2, h3, h4, h5, h6,
+.hero-title, .hero h1, .section-title, .section-heading,
+.card-title, .report-title, .brand, .brand-name,
+strong, b, label, legend, summary {
+  color: #ffffff !important;
+  opacity: 1 !important;
+  text-shadow: 0 1px 12px rgba(72,170,255,.12);
+}
+p, li, dd, dt, blockquote,
+.hero-description, .section-description, .description,
+.subtitle, .body-text, .card p, .report-card p,
+.feature-card p, .insight-card p, .metric-card p,
+.panel p, .content-card p, .method-card p,
+.project-card p, .stat-card p, .gallery-card p,
+footer p, .footer p {
+  color: #e4efff !important;
+  opacity: 1 !important;
+}
+small, .muted, .text-muted, .caption, .helper-text,
+.meta, .metadata, .report-meta, .card-meta {
+  color: #c2d5ee !important;
+  opacity: 1 !important;
+}
+a, .navlinks a, .nav a, footer a, .footer a {
+  color: #8beaff !important;
+}
+a:hover, .navlinks a:hover, .nav a:hover,
+footer a:hover, .footer a:hover {
+  color: #ffffff !important;
+}
+.eyebrow, .section-kicker, .section-label, .overline,
+.tag, .chip, .badge {
+  color: #8ff3ff !important;
+  opacity: 1 !important;
+}
+input, textarea, select {
+  color: #ffffff !important;
+}
+input::placeholder, textarea::placeholder {
+  color: #b7c9df !important;
+  opacity: 1 !important;
+}
+/* Preserve button contrast and white Power BI canvases. */
+button, .btn, a.btn, .button, .primary-btn {
+  color: #031323 !important;
+}
+iframe, .report-frame, .powerbi-frame, .dashboard-frame {
+  background: #ffffff !important;
+}
+
+
+
+/* =====================================================
+   CONTRAST REPAIR — GALACTIC THEME
+   Fix the original dark-on-dark headings and washed-out
+   white cards. Keep dashboard canvases untouched.
+===================================================== */
+:root {
+  --ink: #f4f8ff;
+  --ink-soft: #d5e6f8;
+  --muted: #c0d2e7;
+  --surface: rgba(7, 23, 47, .82);
+  --surface-strong: rgba(7, 23, 47, .94);
+  --line: rgba(111, 190, 255, .22);
+}
+
+/* Actual heading selectors used throughout this page */
+.section-head h2,
+.index-intro h2,
+.info-panel h2,
+.closing h2,
+.hero h1,
+.overview-card h3,
+.index-card h3,
+.report-top h3,
+.insight h3,
+.method h3,
+.placeholder h3,
+.hero-note h3 {
+  color: #f7fbff !important;
+  opacity: 1 !important;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, .38) !important;
+}
+
+.section-head > p,
+.index-intro p,
+.info-panel p,
+.overview-card p,
+.index-card p,
+.report-top p,
+.insight p,
+.method p,
+.closing p,
+.hero-copy,
+.hero-note p,
+.info-point span,
+.stat span,
+.footer,
+.footer p {
+  color: #d5e4f5 !important;
+  opacity: 1 !important;
+}
+
+/* The main copy and all small labels should remain readable */
+.page-layer,
+.page-layer section,
+.page-layer .section,
+.page-layer li,
+.page-layer label,
+.page-layer .kicker,
+.page-layer .eyebrow,
+.page-layer .index-number,
+.page-layer .info-point strong {
+  color: #e8f3ff !important;
+}
+
+/* Replace pale translucent cards with dark glass that belongs
+   to the navy/cyan space palette. */
+.panel,
+.index-card,
+.overview-card,
+.info-panel,
+.info-point,
+.hero-note,
+.closing-panel,
+.insight,
+.method {
+  color: #e8f3ff !important;
+  background: linear-gradient(145deg, rgba(8, 29, 57, .94), rgba(8, 20, 43, .88)) !important;
+  border: 1px solid rgba(103, 190, 244, .28) !important;
+  box-shadow: 0 16px 42px rgba(0, 0, 0, .22), inset 0 1px 0 rgba(177, 224, 255, .07) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.index-number,
+.index-card .index-number,
+.info-point strong,
+.report-number,
+.tag,
+.chip,
+.badge {
+  color: #8feaff !important;
+}
+.index-icon,
+.index-arrow,
+.info-link,
+.pill {
+  color: #83e7f5 !important;
+}
+.pill {
+  background: rgba(42, 164, 202, .13) !important;
+  border-color: rgba(104, 218, 240, .28) !important;
+}
+
+/* Nav stays dark glass; keep its logo and links crisp. */
+.topbar {
+  background: rgba(3, 14, 32, .94) !important;
+  border-bottom: 1px solid rgba(104, 190, 245, .20) !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .24) !important;
+}
+.brand-name,
+.brand-name small,
+.navlinks a,
+.menu {
+  color: #eaf7ff !important;
+}
+.navlinks a:hover { color: #8feaff !important; }
+
+/* Keep accent labels vivid without using low-contrast red text. */
+.kicker,
+.eyebrow,
+.section-kicker,
+.section-label,
+.overline {
+  color: #79e8f4 !important;
+}
+
+/* Preserve CTA readability and the white Power BI report canvas. */
+.primary-link,
+.primary-btn,
+button.primary-link,
+button.primary-btn {
+  color: #ffffff !important;
+}
+.secondary-link {
+  color: #eaf7ff !important;
+  background: rgba(12, 39, 69, .92) !important;
+  border: 1px solid rgba(121, 206, 246, .35) !important;
+}
+iframe,
+.report-frame,
+.powerbi-frame,
+.dashboard-frame,
+.report-frame iframe {
+  background: #ffffff !important;
+}
+
+
+
+/* =====================================================
+   FINAL REPORT INTRODUCTION POLISH — ALL EIGHT REPORTS
+   Left: bright white copy on the galactic background.
+   Right: clean light cards with dark, readable typography
+   and refined cyan/blue borders. Power BI frames untouched.
+===================================================== */
+.info-section .info-panel,
+.info-section .info-panel.panel,
+.info-section .info-panel.reveal {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.info-section .info-panel > div:first-child,
+.info-section .info-panel > div:first-child * {
+  opacity: 1 !important;
+}
+.info-section .info-panel .kicker {
+  color: #77e9f4 !important;
+  font-weight: 800 !important;
+  letter-spacing: .16em !important;
+  text-shadow: 0 1px 10px rgba(0,0,0,.45) !important;
+}
+.info-section .info-panel h2 {
+  color: #ffffff !important;
+  opacity: 1 !important;
+  text-shadow: 0 2px 18px rgba(0,0,0,.48) !important;
+}
+.info-section .info-panel p {
+  color: #eaf3ff !important;
+  opacity: 1 !important;
+  text-shadow: 0 1px 8px rgba(0,0,0,.52) !important;
+}
+
+/* Light cards are intentional: restore a crisp white surface,
+   with a subtle cool border and dark ink for comfortable reading. */
+.info-section .info-points .info-point {
+  background: linear-gradient(145deg, #ffffff 0%, #f3f8ff 100%) !important;
+  border: 1px solid #9dcbe8 !important;
+  border-top: 3px solid #35b9d3 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 26px rgba(0, 8, 25, .22),
+              0 0 0 1px rgba(255,255,255,.22) !important;
+  min-height: 104px !important;
+  padding: 17px 18px !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease !important;
+}
+.info-section .info-points .info-point:hover {
+  transform: translateY(-3px) !important;
+  border-color: #55c9df !important;
+  box-shadow: 0 15px 30px rgba(0, 8, 25, .27),
+              0 0 0 1px rgba(91,211,235,.20) !important;
+}
+.info-section .info-points .info-point strong {
+  display: block !important;
+  color: #07547a !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  line-height: 1.4 !important;
+  margin-bottom: 8px !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+}
+.info-section .info-points .info-point span {
+  display: block !important;
+  color: #29445e !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 1.65 !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+}
+
+/* Keep intro links legible and visually consistent. */
+.info-section .info-link,
+.info-section .info-link a {
+  color: #8cecff !important;
+}
+
+@media (max-width: 760px) {
+  .info-section .info-panel {
+    grid-template-columns: 1fr !important;
+    gap: 22px !important;
+    padding: 22px 0 !important;
+  }
+  .info-section .info-points {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+  .info-section .info-points .info-point {
+    min-height: 0 !important;
+    padding: 14px !important;
+  }
+}
+@media (max-width: 420px) {
+  .info-section .info-points { grid-template-columns: 1fr !important; }
+}
+
+
+
+/* =========================================================
+   HEALTHSCOPE — GALACTIC GLASS NAVIGATION REFRESH
+   Refines only the top navigation bar; page/report styling
+   and Power BI embeds remain untouched.
+   ========================================================= */
+.topbar {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 2500 !important;
+  isolation: isolate;
+  overflow: visible !important;
+  background: linear-gradient(110deg,
+    rgba(5, 19, 42, .72),
+    rgba(9, 30, 61, .56) 48%,
+    rgba(10, 20, 48, .72)) !important;
+  border-bottom: 1px solid rgba(112, 220, 255, .24) !important;
+  box-shadow: 0 12px 36px rgba(0, 5, 22, .24),
+              inset 0 1px 0 rgba(255,255,255,.08) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(165%) !important;
+  backdrop-filter: blur(24px) saturate(165%) !important;
+}
+.topbar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 12% 0%, rgba(42, 196, 255, .18), transparent 34%),
+    radial-gradient(ellipse at 82% 100%, rgba(105, 92, 255, .16), transparent 38%);
+  opacity: .95;
+}
+.topbar::after {
+  content: "";
+  position: absolute;
+  left: 4%; right: 4%; bottom: -1px;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(65,220,255,.82),
+    rgba(142,125,255,.72), rgba(65,220,255,.82), transparent);
+  box-shadow: 0 0 12px rgba(51,198,255,.55), 0 0 25px rgba(87,116,255,.25);
+}
+.topbar .nav {
+  min-height: 82px !important;
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+.topbar .brand { gap: 13px; text-decoration: none; }
+.topbar .brand-mark {
+  width: 46px !important;
+  height: 46px !important;
+  border-radius: 15px !important;
+  color: #fff !important;
+  background: linear-gradient(140deg, #42e0f4 0%, #397eea 56%, #927bff 100%) !important;
+  border: 1px solid rgba(255,255,255,.32) !important;
+  box-shadow: 0 0 0 4px rgba(69,190,255,.08),
+              0 7px 25px rgba(44,150,255,.28),
+              inset 0 1px 0 rgba(255,255,255,.45) !important;
+  transition: transform .28s ease, box-shadow .28s ease;
+}
+.topbar .brand:hover .brand-mark {
+  transform: translateY(-2px) rotate(-4deg);
+  box-shadow: 0 0 0 6px rgba(69,190,255,.1), 0 0 30px rgba(44,190,255,.42),
+              inset 0 1px 0 rgba(255,255,255,.5) !important;
+}
+.topbar .brand-name {
+  color: #f5fbff !important;
+  font-size: 17px !important;
+  font-weight: 800 !important;
+  letter-spacing: -.045em;
+  text-shadow: 0 0 18px rgba(114,205,255,.18);
+}
+.topbar .brand-name small {
+  color: #a9c7df !important;
+  font-size: 9px !important;
+  letter-spacing: .17em !important;
+}
+.topbar .navlinks { gap: clamp(7px, 1.15vw, 17px) !important; }
+.topbar .navlinks a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: #d9eaff !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: .005em;
+  text-decoration: none;
+  transition: color .22s ease, background .22s ease, border-color .22s ease,
+              transform .22s ease, box-shadow .22s ease;
+}
+.topbar .navlinks a::after { display: none !important; }
+.topbar .navlinks a:hover,
+.topbar .navlinks a:focus-visible {
+  color: #fff !important;
+  background: linear-gradient(110deg, rgba(42,190,238,.17), rgba(113,105,255,.16));
+  border-color: rgba(113,218,255,.28);
+  box-shadow: 0 0 20px rgba(49,175,255,.12), inset 0 1px 0 rgba(255,255,255,.1);
+  transform: translateY(-1px);
+  outline: none;
+}
+.topbar .menu {
+  color: #effaff !important;
+  background: rgba(49,157,219,.13) !important;
+  border: 1px solid rgba(113,218,255,.32) !important;
+  border-radius: 12px !important;
+}
+@media (max-width: 760px) {
+  .topbar .nav { min-height: 72px !important; }
+  .topbar .brand-mark { width: 41px !important; height: 41px !important; }
+  .topbar .brand-name { font-size: 15px !important; }
+  .topbar .navlinks a { padding: 0 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .topbar *, .topbar *::before, .topbar *::after { transition-duration: .01ms !important; }
+}
+
+
+
+/* TRANSPARENT TITLE BAR + EARTH CLEARANCE */
+.topbar {
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+.topbar::before, .topbar::after {
+  display: none !important;
+  content: none !important;
+}
+/* Keep the Earth fully visible below the navigation instead of letting its
+   upper edge sit underneath the sticky title bar. */
+.global-earth-wrap {
+  top: calc(50% + 58px) !important;
+}
+@media (max-width: 760px) {
+  .global-earth-wrap { top: calc(50% + 38px) !important; }
+}
+
+
+/* =========================================================
+   FLOATING CENTER NAVIGATION + FULL-WIDTH POWER BI CANVAS
+   Matches the supplied reference: brand left, pill navigation
+   centered, menu right; dashboard gets the available canvas.
+   ========================================================= */
+.topbar {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 2500 !important;
+  height: 78px !important;
+  min-height: 78px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  overflow: visible !important;
+}
+.topbar::before, .topbar::after { display: none !important; content: none !important; }
+.topbar .nav {
+  position: relative !important;
+  width: min(100% - 48px, 1500px) !important;
+  max-width: 1500px !important;
+  min-height: 78px !important;
+  height: 78px !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 20px !important;
+}
+.topbar .brand { position: relative !important; z-index: 2 !important; }
+.topbar .navlinks {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  width: max-content !important;
+  max-width: calc(100% - 360px) !important;
+  padding: 6px !important;
+  border: 1px solid rgba(190,225,255,.20) !important;
+  border-radius: 999px !important;
+  background: rgba(7,20,43,.64) !important;
+  box-shadow: 0 10px 32px rgba(0,8,28,.22), inset 0 1px 0 rgba(255,255,255,.12) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(155%) !important;
+  backdrop-filter: blur(18px) saturate(155%) !important;
+}
+.topbar .navlinks a {
+  min-height: 36px !important;
+  padding: 0 17px !important;
+  border: 1px solid transparent !important;
+  border-radius: 999px !important;
+  color: #f2f8ff !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  white-space: nowrap !important;
+}
+.topbar .navlinks a:hover,
+.topbar .navlinks a:focus-visible,
+.topbar .navlinks a.active {
+  color: #07172e !important;
+  background: #f5f9ff !important;
+  border-color: rgba(255,255,255,.8) !important;
+  box-shadow: 0 3px 12px rgba(0,0,0,.15) !important;
+}
+.topbar .menu {
+  position: relative !important;
+  z-index: 2 !important;
+  margin-left: auto !important;
+  border-radius: 999px !important;
+  padding: 10px 18px !important;
+  color: #f5fbff !important;
+  background: rgba(7,20,43,.62) !important;
+  border: 1px solid rgba(190,225,255,.20) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  backdrop-filter: blur(14px) !important;
+}
+/* Remove the narrow content wrapper around Power BI so the embedded
+   report uses the same wide landscape space as its native report canvas. */
+.report-section > .wrap {
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: clamp(10px, 1.4vw, 22px) !important;
+  padding-right: clamp(10px, 1.4vw, 22px) !important;
+}
+.report-section .report-frame {
+  width: 100% !important;
+  max-width: none !important;
+  aspect-ratio: 16 / 9 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+.report-section .report-frame iframe {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  border: 0 !important;
+  display: block !important;
+}
+@media (max-width: 900px) {
+  .topbar .nav { width: calc(100% - 28px) !important; }
+  .topbar .navlinks { max-width: calc(100% - 230px) !important; }
+  .topbar .navlinks a { padding: 0 10px !important; font-size: 11px !important; }
+}
+@media (max-width: 680px) {
+  .topbar, .topbar .nav { height: 68px !important; min-height: 68px !important; }
+  .topbar .navlinks {
+    position: static !important;
+    transform: none !important;
+    max-width: none !important;
+    width: auto !important;
+    margin-left: auto !important;
+    margin-right: 8px !important;
+    padding: 4px !important;
+    gap: 0 !important;
+  }
+  .topbar .navlinks a { min-height: 32px !important; padding: 0 9px !important; font-size: 10px !important; }
+  .topbar .brand-name { font-size: 13px !important; }
+  .topbar .brand-name small { font-size: 8px !important; }
+  .topbar .brand-mark { width: 36px !important; height: 36px !important; }
+  .topbar .menu { display: none !important; }
+  .report-section > .wrap { padding-left: 6px !important; padding-right: 6px !important; }
+  .report-section .report-frame { aspect-ratio: 16 / 9 !important; border-radius: 4px !important; }
+}
+
+
+/* RESTORE THE ORIGINAL CENTERED WEBSITE WIDTH FOR DASHBOARDS */
+.report-section > .wrap {
+  width: min(calc(100% - 48px), var(--content-width)) !important;
+  max-width: var(--content-width) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+.report-section .report-frame {
+  width: 100% !important;
+  max-width: 100% !important;
+  aspect-ratio: 16 / 9 !important;
+  min-height: 300px !important;
+  height: auto !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding: 0 !important;
+  border: 1px solid rgba(255,255,255,.95) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 18px 50px rgba(54,86,113,.10) !important;
+  overflow: hidden !important;
+}
+.report-section .report-frame iframe {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  border: 0 !important;
+  display: block !important;
+}
+@media (max-width: 760px) {
+  .report-section > .wrap {
+    width: calc(100% - 36px) !important;
+    max-width: var(--content-width) !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  .report-section .report-frame {
+    aspect-ratio: 4 / 3 !important;
+    min-height: 260px !important;
+    border-radius: 16px !important;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<!-- CONTINUOUS HEALTHCARE ANIMATION BACKGROUND: visible behind the entire website -->
+<div class="healthcare-ambient" id="healthcareAmbient" aria-hidden="true">
+  <div class="ambient-glow glow-one"></div>
+  <div class="ambient-glow glow-two"></div>
+  <div class="global-earth-wrap">
+    <div class="global-earth" id="globalEarth">
+      <svg class="global-earth-map" viewBox="0 0 360 360" aria-hidden="true">
+        <defs>
+          <clipPath id="globalEarthClip"><circle cx="180" cy="180" r="166"/></clipPath>
+          <radialGradient id="globalOcean" cx="32%" cy="25%" r="78%">
+            <stop offset="0%" stop-color="#c9eafa"/>
+            <stop offset="55%" stop-color="#78b8dc"/>
+            <stop offset="100%" stop-color="#286b9e"/>
+          </radialGradient>
+        </defs>
+        <circle cx="180" cy="180" r="168" fill="url(#globalOcean)"/>
+        <g clip-path="url(#globalEarthClip)">
+          <g fill="#d8eee4" stroke="#a9d6ca" stroke-width="1.4">
+            <path d="M37 76l26-28 40-8 26 18-7 24-28 10-14 28-28-5-20-18z"/>
+            <path d="M94 143l29-18 25 15 8 32-17 34-11 46-22 18-14-34-3-42-18-23z"/>
+            <path d="M150 54l29-21 45 8 27 22-5 30-29 12-20 24-31-10-17-29z"/>
+            <path d="M202 124l31-21 37 10 20 31-12 26-31 3-17 28-23-13-15-34z"/>
+            <path d="M223 211l31-10 35 17 12 31-22 23-37-5-22-25z"/>
+            <path d="M126 43l21-12 22 9-4 19-25 5z"/>
+          </g>
+          <!-- India highlighted as the focal region -->
+          <path class="global-india" d="M226 145l18 9 8 18-9 14-7 25-13 23-9-19-7-20-12-15 9-22z"
+                fill="#e3344d" stroke="#fff" stroke-width="2.4"/>
+          <path d="M180 14V346M14 180H346" stroke="rgba(255,255,255,.22)" stroke-width="1.2"/>
+          <ellipse cx="180" cy="180" rx="104" ry="166" fill="none" stroke="rgba(255,255,255,.20)" stroke-width="1.5"/>
+          <ellipse cx="180" cy="180" rx="52" ry="166" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="1.2"/>
+        </g>
+        <circle cx="180" cy="180" r="168" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="3"/>
+      </svg>
+      <span class="global-india-pin"></span>
+    </div>
+    <div class="global-earth-orbit orbit-global-one"></div>
+    <div class="global-earth-orbit orbit-global-two"></div>
+    <div class="global-india-callout"><span class="callout-pulse"></span><b>INDIA</b><small>Focus region</small></div>
+  </div>
+
+  <div class="ambient-dna">
+    <svg viewBox="0 0 120 260" fill="none">
+      <path d="M20 8 C110 55 10 205 100 252" stroke="#d52b43" stroke-width="5" stroke-linecap="round"/>
+      <path d="M100 8 C10 55 110 205 20 252" stroke="#f08a98" stroke-width="5" stroke-linecap="round"/>
+      <g stroke="#bd5366" stroke-width="2.5" opacity=".72">
+        <path d="M29 28H91M22 57H98M18 88H102M18 119H102M22 150H98M29 181H91M37 212H83M47 238H73"/>
+      </g>
+    </svg>
+  </div>
+  <div class="ambient-heart">
+    <svg viewBox="0 0 120 110" fill="none">
+      <path d="M60 98C47 84 10 58 10 32C10 5 43 1 60 27C77 1 110 5 110 32C110 58 73 84 60 98Z" fill="#e94b60" opacity=".88"/>
+      <path d="M13 53H39L49 34L62 72L75 47L84 53H107" stroke="#fff7f7" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+  <div class="ambient-plus plus-one">+</div>
+  <div class="ambient-plus plus-two">+</div>
+  <div class="ambient-ecg">
+    <svg viewBox="0 0 420 100" fill="none">
+      <path d="M0 52H92L116 52L137 18L164 83L190 39L211 52H260L282 52L303 18L330 83L356 39L377 52H420" stroke="#d52b43" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+  <div class="ambient-orbit orbit-a"></div>
+  <div class="ambient-orbit orbit-b"></div>
+  <div class="ambient-particle particle-a"></div>
+  <div class="ambient-particle particle-b"></div>
+  <div class="ambient-particle particle-c"></div>
+</div>
+
+<div class="page-layer">
+
+<!-- NAVIGATION -->
+<header class="topbar">
+  <div class="wrap nav">
+
+    <a class="brand" href="#home" aria-label="HealthScope home">
+      <span class="brand-mark">H</span>
+      <span class="brand-name">
+        HealthScope
+        <small>Healthcare Analytics</small>
+      </span>
+    </a>
+
+    <button
+      class="menu"
+      id="menu"
+      type="button"
+      aria-expanded="false"
+      aria-controls="navlinks">
+      ☰ Menu
+    </button>
+
+    <nav class="navlinks" id="navlinks" aria-label="Main navigation">
+      <a href="#home">Home</a>
+      <a href="#overview">About the Project</a>
+      <a href="#directory">Report Directory</a>
+      <a href="#insights">Key Insights</a>
+      <a href="#technology">Tools &amp; Technologies</a>
+      <a href="#analyst">Data Analyst</a>
+      <a href="#methodology">Methodology</a>
+    </nav>
+
+  </div>
+</header>
+
+<main>
+  <!-- =====================================================
+     HOME PAGE
+===================================================== -->
+
+<section class="hero" id="home">
+  <div class="wrap hero-grid">
+
+    <div class="hero-content reveal">
+
+      <div class="eyebrow">
+        <span class="pulse-dot"></span>
+        Big Data Healthcare Analysis
+      </div>
+
+      <h1>
+        Better data.<br>
+        <span class="gradient">Better healthcare.</span>
+      </h1>
+
+      <p class="hero-copy">
+        Explore healthcare data through interactive dashboards, discover
+        meaningful patterns, and turn complex records into clearer insights
+        that support informed analysis and decision-making.
+      </p>
+
+      <div class="hero-actions">
+        <a class="primary-link" href="#directory">
+          Explore dashboards <span>↗</span>
+        </a>
+
+        <a class="secondary-link" href="#overview">
+          About the project
+        </a>
+      </div>
+
+      <div class="hero-stats">
+
+        <div class="stat">
+          <strong>20,000</strong>
+          <span>Patient records*</span>
+        </div>
+
+        <div class="stat">
+          <strong>32</strong>
+          <span>Disease categories*</span>
+        </div>
+
+        <div class="stat">
+          <strong>09</strong>
+          <span>Analysis reports</span>
+        </div>
+
+      </div>
+    </div>
+
+  <div class="hero-side visual-stage" id="visualStage">
+<div class="hero-doctor-scene" role="img" aria-label="Animated healthcare professional reviewing patient data on a digital dashboard">
+  <div class="doctor-scene-glow"></div>
+  <div class="doctor-data-card data-card-one">
+    <span class="data-card-label">PATIENT ANALYTICS</span>
+    <div class="mini-bars"><i></i><i></i><i></i><i></i><i></i></div>
+    <small>Live data review</small>
+  </div>
+  <div class="doctor-data-card data-card-two">
+    <span class="data-card-label">HEALTH INDEX</span>
+    <strong>98.4%</strong>
+    <div class="mini-line"><i></i></div>
+  </div>
+  <div class="doctor-monitor">
+    <div class="monitor-top"><i></i><i></i><i></i><span>Clinical dashboard</span></div>
+    <div class="monitor-content">
+      <div class="monitor-chart">
+        <span class="chart-title">Patient trends</span>
+        <svg viewBox="0 0 230 95" aria-hidden="true">
+          <path d="M4 73 C28 68 30 37 54 48 S83 76 105 43 S137 23 155 39 S188 56 226 12" fill="none" stroke="#d83b52" stroke-width="3.5" stroke-linecap="round"/>
+          <path d="M4 82H226" stroke="#d7e5ef" stroke-width="1.5" stroke-dasharray="4 5"/>
+        </svg>
+      </div>
+      <div class="monitor-stats"><b>20K<small>Records</small></b><b>32<small>Categories</small></b></div>
+    </div>
+  </div>
+  <div class="doctor-person">
+    <div class="doctor-head">
+      <div class="doctor-hair"></div>
+      <div class="doctor-face"><i class="doctor-eye"></i><i class="doctor-eye second"></i><i class="doctor-smile"></i></div>
+    </div>
+    <div class="doctor-neck"></div>
+    <div class="doctor-coat">
+      <div class="coat-shirt"></div>
+      <div class="coat-lapel left"></div><div class="coat-lapel right"></div>
+      <div class="coat-pocket"><span>+</span></div>
+    </div>
+    <div class="doctor-arm"><div class="doctor-hand"></div></div>
+    <div class="doctor-tablet"><span></span><i></i><b></b></div>
+  </div>
+  <div class="scene-medical-plus">+</div>
+  <div class="scene-pulse-dot"></div>
+  <div class="scene-caption"><span></span> HEALTHCARE DATA IN ACTION</div>
+</div>
+
+<div class="scroll-cue">
+    <i></i>
+    Scroll to explore
+  </div>
+</section>
+
+
+<!-- =====================================================
+     PROJECT OVERVIEW
+===================================================== -->
+
+<section id="overview">
+  <div class="wrap">
+
+    <div class="section-head reveal">
+
+      <div>
+        <div class="kicker">About the project</div>
+        <h2>Understanding healthcare<br>through data.</h2>
+      </div>
+
+      <p>
+        HealthScope presents a structured analysis of healthcare records.
+        The project uses data preparation, exploration and visualisation
+        to make complex information easier to review.
+      </p>
+
+    </div>
+
+    <div class="overview-grid">
+
+      <article class="overview-card panel reveal">
+        <h3>Project Overview</h3>
+
+        <p>
+          The Big Data Healthcare Analysis project explores a healthcare
+          dataset containing patient records and disease-related information.
+          It uses Excel for data preparation and initial exploration, followed
+          by Power BI for interactive reporting and visual analysis.
+        </p>
+
+        <div class="pill-row">
+          <span class="pill">Healthcare Data</span>
+          <span class="pill">Data Analytics</span>
+          <span class="pill">Interactive Reports</span>
+        </div>
+      </article>
+
+      <article class="overview-card panel reveal">
+        <h3>Project Objectives</h3>
+
+        <p>
+          The objective is to organise healthcare information, examine
+          patterns across available patient and disease categories, compare
+          recorded measures, and communicate findings through accessible
+          dashboards.
+        </p>
+
+        <div class="pill-row">
+          <span class="pill">Pattern Analysis</span>
+          <span class="pill">Data Visualisation</span>
+          <span class="pill">Decision Support</span>
+        </div>
+      </article>
+
+      <article class="overview-card panel reveal">
+        <h3>Tools &amp; Technologies</h3>
+
+        <p>
+          Excel supports data cleaning, organisation, summaries and pivot
+          tables. Power BI is used to create interactive dashboards.
+          HTML and CSS provide the website structure and visual presentation.
+        </p>
+
+        <div class="pill-row">
+          <span class="pill">Microsoft Excel</span>
+          <span class="pill">Power BI</span>
+          <span class="pill">HTML</span>
+          <span class="pill">CSS</span>
+        </div>
+      </article>
+
+      <article class="overview-card panel reveal">
+        <h3>Scope of Analysis</h3>
+
+        <p>
+          The reports cover demographic distribution, time trends, regional
+          comparisons, risk indicators, hospital insights, social factors,
+          recovery outcomes and healthcare costs, subject to the fields
+          available in the dataset.
+        </p>
+
+        <div class="pill-row">
+          <span class="pill">6 Report Areas</span>
+          <span class="pill">32 Disease Categories*</span>
+          <span class="pill">20,000 Records*</span>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+
+
+
+<!-- =====================================================
+     UNIFIED POWER BI DASHBOARD — SIX PAGE SELECTOR
+===================================================== -->
+<section class="index-section unified-dashboard" id="directory">
+  <div class="wrap">
+    <div class="index-intro reveal">
+      <div>
+        <div class="kicker">Interactive Power BI workspace</div>
+        <h2>Explore the healthcare dashboards.</h2>
+        <p>Choose a report area below. Each button is wired to a Power BI page ID in the configuration at the top of the website JavaScript.</p>
+      </div>
+    </div>
+
+    <div class="dashboard-selector" aria-label="Choose dashboard page">
+      <button class="dashboard-tab active" type="button" data-page="demographics"><span>01</span> Demographic Analysis</button>
+      <button class="dashboard-tab" type="button" data-page="trends"><span>02</span> Time Trend Analysis</button>
+      <button class="dashboard-tab" type="button" data-page="disease"><span>03</span> Disease Distribution</button>
+    </div>
+
+    <div class="dashboard-heading reveal">
+      <div><span class="live-dot"></span><span id="activeDashboardLabel">Demographic Analysis</span></div>
+      <button class="expand" id="expandDashboard" type="button">⛶ Expand dashboard</button>
+    </div>
+
+    <div class="report-frame unified-report panel" id="unifiedReportFrame">
+      <iframe id="powerBiReport" title="HealthScope interactive Power BI report" loading="lazy" allow="fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" src="https://app.powerbi.com/view?r=eyJrIjoiYjU0Yzk1ZjQtNWFhYS00ZWM3LTg1YTEtZjE5MmM5OTkzNjVmIiwidCI6ImY4ZGIxZWNlLTJmYTctNDdkOS1iZjYxLThlYmEyN2VmODI4NCJ9"></iframe>
+    </div>
+
+    <div class="dashboard-selector dashboard-selector-bottom" aria-label="More dashboard pages">
+      <button class="dashboard-tab" type="button" data-page="risk"><span>04</span> Risk Analysis</button>
+      <button class="dashboard-tab" type="button" data-page="cost"><span>05</span> Cost Analysis</button>
+      <button class="dashboard-tab" type="button" data-page="hospital"><span>06</span> Hospital Insights</button>
+    </div>
+    <p class="dashboard-note">To enable direct page switching, enter the matching Power BI internal page ID for each report in the PAGE_IDS object in the JavaScript section. The visible report titles are not the same as Power BI page IDs. Until those IDs are added, the buttons will explain what is missing instead of pretending that a page has changed.</p>
+  </div>
+</section>
+
+<!-- =====================================================
+     DATASET-BASED KEY INSIGHTS
+===================================================== -->
+<section id="insights">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div><div class="kicker">Based on the uploaded dataset</div><h2>Key insights from<br>20,000 records.</h2></div>
+      <p>These figures are calculated from the supplied Final worksheet in fin.xlsx. They describe this dataset only and should not be interpreted as population prevalence or clinical risk estimates.</p>
+    </div>
+    <div class="insight-metrics">
+      <article class="metric-card panel reveal"><span class="metric-label">Patient records</span><strong>20,000</strong><small>Rows in the Final worksheet</small></article>
+      <article class="metric-card panel reveal"><span class="metric-label">Disease names</span><strong>32</strong><small>Distinct recorded diseases</small></article>
+      <article class="metric-card panel reveal"><span class="metric-label">Date coverage</span><strong>2018–2025</strong><small>Diagnosis dates in the file</small></article>
+      <article class="metric-card panel reveal"><span class="metric-label">Geographic coverage</span><strong>33</strong><small>Distinct states/territories recorded</small></article>
+    </div>
+    <div class="chart-grid data-insight-grid">
+      <article class="insight panel reveal"><div class="icon">👥</div><h3>Age distribution</h3><p>The 20–29 age group is the largest in the dataset, with <strong>4,190 records</strong> (about 21.0%).</p><span class="tag">Largest age band</span></article>
+      <article class="insight panel reveal"><div class="icon">⚕️</div><h3>Recorded outcomes</h3><p><strong>8,440 records</strong> are marked Recovered (42.2%). A further 5,253 are marked Recovering.</p><span class="tag">Outcome categories</span></article>
+      <article class="insight panel reveal"><div class="icon">📍</div><h3>Regional distribution</h3><p>The North region has the highest record count in the file, with <strong>5,728 records</strong> (28.6%).</p><span class="tag">Regional record count</span></article>
+      <article class="insight panel reveal"><div class="icon">🏥</div><h3>Hospital type</h3><p>Government hospitals account for <strong>7,083 records</strong>, the largest hospital-type category (35.4%).</p><span class="tag">Facility categories</span></article>
+      <article class="insight panel reveal"><div class="icon">🚭</div><h3>Smoking status</h3><p><strong>12,032 records</strong> are classified as Never (60.2%); 3,988 as Current and 3,980 as Former.</p><span class="tag">Lifestyle field</span></article>
+      <article class="insight panel reveal"><div class="icon">💰</div><h3>Treatment cost</h3><p>The median recorded treatment cost is <strong>₹6,604.50</strong>. The mean is much higher (about ₹1,07,941), indicating a strongly right-skewed cost distribution.</p><span class="tag">Median is more representative here</span></article>
+    </div>
+  
+</section>
+
+<!-- =====================================================
+     TOOLS AND TECHNOLOGIES
+===================================================== -->
+<section id="technology">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div><div class="kicker">Project technology stack</div><h2>Tools behind<br>the analysis.</h2></div>
+      <p>Each tool supports a specific stage, from preparing the healthcare records to presenting interactive results through the website.</p>
+    </div>
+    <div class="technology-grid">
+      <article class="technology-card panel reveal"><div class="tech-logo excel-logo">X</div><h3>Microsoft Excel</h3><p>Used to inspect, organise and prepare the patient dataset, review duplicates and missing values, and perform initial summaries before Power BI analysis.</p><span>Data preparation</span></article>
+      <article class="technology-card panel reveal"><div class="tech-logo powerbi-logo">▥</div><h3>Microsoft Power BI</h3><p>Used to model the dataset and build interactive reports with KPI cards, charts, maps, slicers and multiple analytical pages.</p><span>Business intelligence</span></article>
+      <article class="technology-card panel reveal"><div class="tech-logo dax-logo">ƒx</div><h3>DAX</h3><p>Used inside Power BI to create measures and calculated indicators that respond to filters and slicer selections.</p><span>Analytical calculations</span></article>
+      <article class="technology-card panel reveal"><div class="tech-logo html-logo">5</div><h3>HTML5</h3><p>Provides the structure of this website, including navigation, project sections, dashboard display and content layout.</p><span>Web structure</span></article>
+      <article class="technology-card panel reveal"><div class="tech-logo css-logo">3</div><h3>CSS3</h3><p>Controls the website's colours, typography, responsive layouts, cards, spacing, transitions and visual effects.</p><span>Visual design</span></article>
+      <article class="technology-card panel reveal"><div class="tech-logo js-logo">JS</div><h3>JavaScript</h3><p>Handles interactive website behaviour such as the mobile menu, dashboard selection controls, reveal animations and the local project analyst.</p><span>Browser interactions</span></article>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================
+     HEALTHCARE PROJECT ANALYST — LOCAL DATASET Q&A
+===================================================== -->
+<section id="analyst">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div><div class="kicker">Interactive project feature</div><h2>Ask the Healthcare<br>Data Analyst.</h2></div>
+      <p>Ask questions about the healthcare dataset in natural language. Gemini helps interpret your question, while the local Python backend calculates answers from aggregate dataset information. This is an academic analytics assistant, not a clinical tool.</p>
+    </div>
+    <div class="analyst-panel panel reveal">
+      <div class="analyst-header"><div class="analyst-avatar">✚</div><div><strong>HealthScope Data Assistant</strong><small>Dataset summary mode · No patient-level records</small></div><span class="analyst-status">Available</span></div>
+      <form id="analystForm" class="analyst-form"><label class="sr-only" for="analystQuestion">Ask a question about the dataset</label><input id="analystQuestion" type="text" placeholder="Ask anything about the healthcare dataset…" autocomplete="off"><button type="submit">Ask <span>↗</span></button></form>
+      <div id="analystAnswer" class="analyst-answer" aria-live="polite">Hello! Ask me about the 20,000 records, demographics, 32 diseases, yearly trends, regions, hospitals, risk factors, outcomes, recovery, costs or missing values. I answer from verified aggregate summaries in the supplied workbook.</div>
+      <p class="analyst-disclaimer">For academic exploration only. The assistant describes aggregate dataset patterns and must not be used to diagnose, predict an individual's health, or recommend treatment.</p>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================
+     PROJECT METHODOLOGY
+===================================================== -->
+
+<section id="methodology">
+  <div class="wrap">
+
+    <div class="section-head reveal">
+
+      <div>
+        <div class="kicker">Methodology</div>
+        <h2>From raw records<br>to readable insights.</h2>
+      </div>
+
+      <p>
+        A structured workflow helps organise the healthcare data,
+        identify patterns and present the analysis through
+        interactive dashboards.
+      </p>
+
+    </div>
+
+    <div class="method-grid">
+
+      <article class="method panel reveal">
+        <span>STEP 01</span>
+        <h3>Data Preparation</h3>
+        <p>
+          Inspect the source data, review column formats, identify
+          duplicates and missing values, and prepare consistent
+          records for analysis.
+        </p>
+      </article>
+
+      <article class="method panel reveal">
+        <span>STEP 02</span>
+        <h3>Data Exploration</h3>
+        <p>
+          Use summaries, pivot tables and comparisons to understand
+          the dataset and investigate its main characteristics.
+        </p>
+      </article>
+
+      <article class="method panel reveal">
+        <span>STEP 03</span>
+        <h3>Visualisation</h3>
+        <p>
+          Develop interactive Power BI reports using appropriate
+          charts, filters, KPI cards and other visuals.
+        </p>
+      </article>
+
+      <article class="method panel reveal">
+        <span>STEP 04</span>
+        <h3>Interpretation</h3>
+        <p>
+          Review the visual results, explain the observed patterns
+          and acknowledge limitations in the underlying data.
+        </p>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- =====================================================
+     CLOSING SECTION
+===================================================== -->
+
+<section class="closing">
+  <div class="wrap">
+
+    <div class="closing-panel panel reveal">
+
+      <div>
+        <div class="kicker">Healthcare Analytics Project</div>
+
+        <h2>Make complex data easier to explore.</h2>
+
+        <p>
+          Explore the reports to review healthcare patterns from different
+          perspectives. Use the Report Directory to navigate between
+          dashboard introductions and their corresponding reports.
+        </p>
+      </div>
+
+      <a class="expand" href="#directory">
+        ↑ Back to Report Directory
+      </a>
+
+    </div>
+
+  </div>
+</section>
+
+</main>
+
+
+<!-- =====================================================
+     FOOTER
+===================================================== -->
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+
+    <span>
+      © <span id="year"></span> HealthScope · Healthcare Analytics Project
+    </span>
+
+    <span>
+      *Dataset figures should be verified against the final dataset.
+    </span>
+
+  </div>
+</footer>
+
+
+<!-- SECTION NAVIGATION DOTS -->
+<nav class="dots" id="dots" aria-label="Section progress"></nav>
+<!-- =====================================================
+     JAVASCRIPT
+===================================================== -->
+
+<script>
+
+/* =====================================================
+   1. UNIFIED POWER BI REPORT — PAGE NAVIGATION
+   IMPORTANT: Fill PAGE_IDS with the actual Power BI internal page IDs.
+   Example format: "ReportSectionabc123..." (not the visible page title).
+   The public Publish-to-web URL does not reveal these IDs by itself.
+===================================================== */
+const POWER_BI_URL = "https://app.powerbi.com/view?r=eyJrIjoiYjU0Yzk1ZjQtNWFhYS00ZWM3LTg1YTEtZjE5MmM5OTkzNjVmIiwidCI6ImY4ZGIxZWNlLTJmYTctNDdkOS1iZjYxLThlYmEyN2VmODI4NCJ9";
+const PAGE_IDS = {
+  demographics: "60369ec1a209b7251c29", // paste the page ID for Demographic Analysis
+  trends: "d32fed9930f5fcf79e22",       // paste the page ID for Time Trend Analysis
+  disease: "4c528f89b61e2cce8037",      // paste the page ID for Disease Distribution
+  risk: "6b3ace377867b713a14e",         // paste the page ID for Risk Analysis
+  cost: "aed01bd117131aad8578",         // paste the page ID for Cost Analysis
+  hospital: "7308efbb6c15e8aeea6c"      // paste the page ID for Hospital Insights
+};
+const dashboardNames = {
+  demographics: "Demographic Analysis", trends: "Time Trend Analysis",
+  disease: "Disease Distribution", risk: "Risk Analysis",
+  cost: "Cost Analysis", hospital: "Hospital Insights"
+};
+const dashboardTabs = document.querySelectorAll(".dashboard-tab");
+const activeDashboardLabel = document.getElementById("activeDashboardLabel");
+const reportIframe = document.getElementById("powerBiReport");
+const dashboardNote = document.querySelector(".dashboard-note");
+function buildPowerBIPageUrl(pageId) {
+  const url = new URL(POWER_BI_URL);
+  url.searchParams.set("pageName", pageId);
+  return url.toString();
+}
+dashboardTabs.forEach(button => {
+  button.addEventListener("click", () => {
+    const key = button.dataset.page;
+    if (!dashboardNames[key]) return;
+    dashboardTabs.forEach(tab => tab.classList.toggle("active", tab.dataset.page === key));
+    if (activeDashboardLabel) activeDashboardLabel.textContent = dashboardNames[key];
+    const pageId = (PAGE_IDS[key] || "").trim();
+    if (pageId && reportIframe) {
+      reportIframe.src = buildPowerBIPageUrl(pageId);
+      if (dashboardNote) dashboardNote.textContent = dashboardNames[key] + " is loading in the Power BI display. If it does not open, check that the page ID in PAGE_IDS is correct.";
+    } else if (dashboardNote) {
+      dashboardNote.textContent = "" + dashboardNames[key] + " is selected, but its Power BI page ID has not been configured yet. In the JavaScript near the top of this section, add the exact internal page ID to PAGE_IDS.";
+    }
+  });
+});
+
+/* =====================================================
+   2. UNIFIED REPORT FULLSCREEN CONTROL
+===================================================== */
+const expandDashboardButton = document.getElementById("expandDashboard");
+const unifiedReportFrame = document.getElementById("unifiedReportFrame");
+function closeFullscreenReports() {
+  document.querySelectorAll(".report-frame.full").forEach(frame => frame.classList.remove("full"));
+  document.body.style.overflow = "";
+  if (expandDashboardButton) expandDashboardButton.textContent = "⛶ Expand dashboard";
+}
+if (expandDashboardButton && unifiedReportFrame) {
+  expandDashboardButton.addEventListener("click", () => {
+    const wasFull = unifiedReportFrame.classList.contains("full");
+    closeFullscreenReports();
+    if (!wasFull) {
+      unifiedReportFrame.classList.add("full");
+      expandDashboardButton.textContent = "✕ Exit expanded view";
+      document.body.style.overflow = "hidden";
+    }
+  });
+}
+document.addEventListener("keydown", event => { if (event.key === "Escape") closeFullscreenReports(); });
+
+/* =====================================================
+   3. HEALTHCARE DATA ASSISTANT — FLEXIBLE QUESTION MATCHING
+   The assistant matches natural-language variations to verified
+   aggregate summaries. It does not generate or invent statistics.
+===================================================== */
+const analystForm = document.getElementById("analystForm");
+const analystQuestion = document.getElementById("analystQuestion");
+const analystAnswer = document.getElementById("analystAnswer");
+
+/* Each topic has verified response content plus common ways people
+   may describe that topic. The matching engine handles many additional
+   sentence variations without storing thousands of duplicate questions. */
+const analystResponses = [
+  {keys:["largest age","most common age","age group","age distribution","age band","youngest","oldest","average age","mean age","median age","age profile","patient age","age wise","age bracket","age range","demographic age"], answer:"The 20–29 age group is the largest, with 4,190 records (about 21.0%). The dataset's average age is about 44.1 years and the median is 44. These figures describe the supplied records only."},
+  {keys:["gender","male female","men women","sex distribution","male patients","female patients","gender ratio","gender wise","gender breakdown"], answer:"Gender counts are Male: 9,926 (49.6%), Female: 9,873 (49.4%), and Other: 201 (1.0%). Male and female counts are very similar in this dataset."},
+  {keys:["top region","highest region","region","north south east west","regional","region wise","geographical region","which region","regional distribution"], answer:"The North region has the most records: 5,728 (28.6%). It is followed by South (4,304), East (4,251), West (2,848), Central (1,904) and Northeast (965)."},
+  {keys:["state","states","which state","top state","highest state","state wise","state distribution","most records state"], answer:"Uttar Pradesh has the highest state count with 2,742 records. Other high-count states include Bihar (1,715), Maharashtra (1,705), Madhya Pradesh (1,416) and West Bengal (1,342). There are 33 distinct states/territories in the file."},
+  {keys:["city","cities","city wise","city distribution","urban centres"], answer:"The dataset contains 132 distinct city names. City counts can be explored in the Regional dashboard; the assistant avoids listing a city ranking unless a specific city-level calculation is requested."},
+  {keys:["urban","rural","semi urban","settlement","rural urban","residential area","area type","location type"], answer:"Settlement counts are Rural: 8,060 (40.3%), Urban: 7,936 (39.7%) and Semi-Urban: 4,004 (20.0%). Rural and urban records are close in number."},
+  {keys:["outcome","recovered","recovering","deceased","death","mortality","death rate","patient status","final status","survival status","outcome distribution"], answer:"Recorded outcomes: Recovered 8,440 (42.2%); Recovering 5,253 (26.3%); Chronic Management 4,485 (22.4%); Deceased 1,822 (9.1%). The death_flag is 1 for 1,822 rows. These are dataset proportions, not clinical survival or mortality estimates."},
+  {keys:["disease category","category of disease","disease types","disease categories","type of disease","disease classification","communicable","non communicable"], answer:"The largest disease category is Non-Communicable (4,970 records), followed by Vector-Borne (3,794), Respiratory (3,112), Infectious (3,097), Waterborne (2,530), Mental Health (1,265) and Genetic (1,232)."},
+  {keys:["most common disease","top disease","disease","illness","condition","disease count","disease wise","common illness","frequent disease","disease distribution"], answer:"There are 32 distinct disease names. Leptospirosis has the highest count (664), followed by Asthma (660), Gastroenteritis (654) and Hypertension (654). These are record counts, not disease prevalence in the general population."},
+  {keys:["severity","severe","critical","mild","moderate","severity level","condition severity","severity distribution"], answer:"Severity counts are Moderate: 6,516; Severe: 6,305; Mild: 4,850; and Critical: 2,329. The labels reflect the severity field recorded in the workbook."},
+  {keys:["hospital type","hospital","government hospital","private hospital","facility","health centre","health center","hospital wise","hospital distribution","medical facility"], answer:"Government hospitals account for 7,083 records (35.4%), and Private hospitals account for 6,963 (34.8%). Primary Health Centers account for 3,026, Community Health Centers 1,992, and AIIMS/Apex Institutions 936."},
+  {keys:["treatment type","treatment method","medication","surgery","icu","treatment distribution","medical treatment","treatment category","therapy"], answer:"Medication is the most frequently recorded treatment type (13,073 rows). Other categories include Surgery (3,138), ICU + Ventilator (1,433), Home Remedies (953), Therapy (666), Observation (506) and Palliative (231). This is descriptive only, not a treatment recommendation."},
+  {keys:["cost","expensive","expense","spending","treatment cost","average cost","median cost","medical bill","healthcare expenditure","money spent","cost analysis","treatment expenses"], answer:"The median treatment cost is ₹6,604.50 and the mean is approximately ₹1,07,940.54. The mean is much higher than the median, indicating a strongly right-skewed cost distribution with some very high values. The median is usually a better description of a typical record here."},
+  {keys:["smoking","smoker","tobacco","cigarette","smoking status","smoking habit","smoker distribution"], answer:"Smoking status is Never for 12,032 rows (60.2%), Current for 3,988 (19.9%) and Former for 3,980 (19.9%). These counts do not establish that smoking caused any recorded disease or outcome."},
+  {keys:["alcohol","drinking","alcohol use","alcohol consumption","drinker","alcohol status"], answer:"Alcohol-use entries include Occasional: 6,697; Heavy: 3,343; and Regular: 3,333. There are 6,627 blank entries, so percentages should be calculated using an explicitly chosen denominator and missing values should not be treated as a category of use."},
+  {keys:["income","economic","socioeconomic","poverty","income level","financial status","income group","below poverty"], answer:"Income-level counts are Lower: 6,916; Middle: 6,006; Below Poverty Line: 4,047; Upper-Middle: 2,015; and High: 1,016. These are the categories recorded in the dataset."},
+  {keys:["insurance","insured","uninsured","ayushman","insurance status","health cover","medical insurance","insurance coverage"], answer:"Insurance-status counts are Uninsured: 8,075; Ayushman Bharat: 4,913; State Scheme: 3,062; Private: 2,984; and Employer: 966."},
+  {keys:["season","monsoon","summer","winter","post monsoon","seasonal","season wise","seasonal distribution"], answer:"Monsoon has the most records (5,761), followed by Summer (5,381), Winter (5,297) and Post-Monsoon (3,561). This is a descriptive seasonal distribution and does not prove seasonality causes disease."},
+  {keys:["year","trend","time trend","date range","diagnosis date","2018","2025","yearly","annual","year wise","records over time","timeline","time series"], answer:"Diagnosis dates span 2018–2025. Yearly counts are 2018: 2,547; 2019: 2,454; 2020: 2,490; 2021: 2,502; 2022: 2,513; 2023: 2,502; 2024: 2,486; and 2025: 2,506. There are 10 missing diagnosis dates."},
+  {keys:["month","monthly","month wise","monthly trend","month distribution"], answer:"Monthly records are highest in August (1,992), followed by July (1,950), September (1,819), January (1,816) and October (1,812). June has the fewest (1,367). This is a count of records by recorded diagnosis month."},
+  {keys:["recovery","recovery days","recover days","recovery duration","days to recover","recovery time","recovery period"], answer:"The recovery_days field has 6,307 blank values. Among nonblank entries, the median is 24 days and the mean is about 33.2 days. Because many records are blank and some outcomes may not require a recovery duration, interpret this average carefully."},
+  {keys:["hospitalized","hospitalization","length of stay","days in hospital","stay","admission duration","hospital days","inpatient days"], answer:"The average recorded hospital stay is about 9.8 days and the median is 6 days. The range is 0 to 60 days. These values describe the days_hospitalized field in the supplied workbook."},
+  {keys:["bmi","body mass","body mass index","weight index","bmi distribution"], answer:"The recorded BMI has an average of about 23.49 and a median of 23.2, with values ranging from 14 to 40. This is a summary of the dataset field, not an individual health assessment."},
+  {keys:["follow up","follow-up","followup","follow up required","monitoring","post treatment follow up"], answer:"Follow-up is marked Yes for 13,905 records (69.5%) and No for 6,095 (30.5%). This reports the follow_up_required field as recorded."},
+  {keys:["blood group","blood type","blood groups","blood group distribution"], answer:"The most frequent blood groups are B+ (6,371 records), O+ (6,314) and A+ (4,401). The remaining categories include AB+, O−, A−, B− and AB−."},
+  {keys:["comorbidity","comorbid","pre existing","pre-existing","underlying condition","existing disease","multiple conditions"], answer:"The comorbidity field includes Kidney Disease (2,314), Diabetes (2,242), Obesity (2,236), Multiple (2,219), Heart Disease (2,217) and Hypertension (2,173). There are also 6,599 blank entries, so missingness matters when comparing these categories."},
+  {keys:["missing","blank","null","data quality","incomplete","duplicate","empty values","missing values","null values","data cleaning","data completeness"], answer:"The workbook has 20,000 rows and 42 columns. Known missing values include 10 diagnosis_date entries, 6,307 recovery_days entries, 6,627 alcohol_use entries and 6,599 comorbidity entries. Blank values should be handled according to field meaning; they should not automatically be replaced with zero. Check duplicate patient IDs separately because repeated IDs may or may not represent duplicate records."},
+  {keys:["dataset size","how many records","how many patients","total records","total patients","rows","columns","dataset","dataset overview","file information","number of entries","number of fields"], answer:"The Final worksheet contains 20,000 rows and 42 columns, 32 distinct disease names, 33 states/territories and 132 cities. Diagnosis dates span 2018–2025, with 10 missing dates. The workbook is an analytical dataset; row count should not automatically be interpreted as unique individuals without validating the patient identifier."},
+  {keys:["what can you do","help","what questions","capabilities","how to use","topics","what do you know"], answer:"You can ask about age and gender distribution; diseases and categories; severity; yearly and monthly trends; states, regions and settlement types; hospital and treatment types; smoking and alcohol fields; income and insurance; outcomes and death_flag; recovery and hospital days; BMI; treatment costs; follow-up; blood groups; comorbidities; and missing data. Ask naturally in your own words; the matcher recognises many different phrasings."}
+];
+
+const analystSynonyms = {
+  "patients":["patient","people","persons","individuals","cases","entries","records"],
+  "number":["count","total","how many","quantity","amount"],
+  "highest":["top","maximum","most","largest","greatest","leading"],
+  "lowest":["bottom","minimum","least","smallest","fewest"],
+  "distribution":["breakdown","spread","split","share","proportion","composition"],
+  "trend":["change","pattern","over time","timeline","progression"],
+  "cost":["expense","spending","price","bill","expenditure"],
+  "disease":["illness","condition","disorder","ailment"],
+  "recovery":["recover","healing","convalescence"],
+  "hospital":["facility","clinic","health centre","health center"],
+  "gender":["sex","male","female","men","women"],
+  "missing":["blank","empty","null","incomplete","unavailable"]
+};
+
+function normalizeAnalystText(value) {
+  let text = String(value || "").toLowerCase();
+  text = text.replace(/₹/g, " rupees ").replace(/&/g, " and ");
+  text = text.replace(/[^a-z0-9]+/g, " ").trim();
+  text = text.replace(/\b(show me|tell me|can you|could you|please|i want to know|i would like to know|give me|find out|what is|what are|how many|how much|which is|which are|in the dataset|in this dataset|from the data|for the dataset)\b/g, " ");
+  return text.replace(/\s+/g, " ").trim();
+}
+
+function analystTokens(value) {
+  const stop = new Set(["the","a","an","is","are","was","were","of","for","to","in","on","at","by","with","and","or","about","me","my","your","data","dataset","please","can","could","would","there","this","that","from"]);
+  return normalizeAnalystText(value).split(" ").filter(word => word && !stop.has(word));
+}
+
+function expandAnalystTokens(tokens) {
+  const expanded = new Set(tokens);
+  for (const token of tokens) {
+    for (const [root, variants] of Object.entries(analystSynonyms)) {
+      if (token === root || variants.includes(token)) {
+        expanded.add(root);
+        variants.forEach(word => expanded.add(word));
+      }
+    }
+    if (token.endsWith("ies") && token.length > 4) expanded.add(token.slice(0, -3) + "y");
+    else if (token.endsWith("s") && token.length > 3) expanded.add(token.slice(0, -1));
+    if (token.endsWith("ing") && token.length > 5) expanded.add(token.slice(0, -3));
+    if (token.endsWith("ed") && token.length > 4) expanded.add(token.slice(0, -2));
+  }
+  return expanded;
+}
+
+function scoreAnalystMatch(question, item) {
+  const normalizedQuestion = normalizeAnalystText(question);
+  const questionTokens = expandAnalystTokens(analystTokens(question));
+  let best = 0;
+
+  for (const phrase of item.keys) {
+    const normalizedPhrase = normalizeAnalystText(phrase);
+    if (!normalizedPhrase) continue;
+
+    let score = 0;
+    if (normalizedQuestion.includes(normalizedPhrase)) score += 5 + Math.min(normalizedPhrase.length / 18, 2);
+
+    const phraseTokens = expandAnalystTokens(analystTokens(phrase));
+    let overlap = 0;
+    phraseTokens.forEach(token => { if (questionTokens.has(token)) overlap++; });
+    const coverage = overlap / Math.max(phraseTokens.size, 1);
+    const precision = overlap / Math.max(questionTokens.size, 1);
+    score += coverage * 4 + precision * 2;
+
+    if (phraseTokens.size === 1 && questionTokens.has([...phraseTokens][0])) score += 1.2;
+    best = Math.max(best, score);
+  }
+  return best;
+}
+
+function answerDatasetQuestion(question) {
+  const normalized = normalizeAnalystText(question);
+  if (!normalized) return "Please enter a question about the healthcare dataset.";
+
+  if (/^(hi|hello|hey|good morning|good evening)$/.test(normalized)) {
+    return "Hello! I’m your HealthScope Data Assistant. Ask a question in your own words and I’ll match it to the verified aggregate summaries available from the project workbook.";
+  }
+
+  if ((normalized.includes("missing") || normalized.includes("blank") || normalized.includes("null") || normalized.includes("empty")) && normalized.includes("recovery")) {
+    return "The recovery_days field contains 6,307 blank values out of 20,000 rows. For the nonblank values, the median is 24 days and the mean is about 33.2 days. Check whether the field is applicable to each outcome before comparing groups.";
+  }
+  if ((normalized.includes("missing") || normalized.includes("blank") || normalized.includes("null") || normalized.includes("empty")) && normalized.includes("diagnosis")) {
+    return "There are 10 missing diagnosis_date values in the 20,000-row worksheet. Diagnosis-date trend summaries should exclude or explicitly account for those missing dates.";
+  }
+  if ((normalized.includes("missing") || normalized.includes("blank") || normalized.includes("null") || normalized.includes("empty")) && normalized.includes("alcohol")) {
+    return "The alcohol_use field has 6,627 blank values. The nonblank counts are Occasional 6,697, Heavy 3,343 and Regular 3,333. Do not treat blanks as a confirmed alcohol-use category.";
+  }
+
+  let bestItem = null;
+  let bestScore = 0;
+  for (const item of analystResponses) {
+    const score = scoreAnalystMatch(question, item);
+    if (score > bestScore) {
+      bestScore = score;
+      bestItem = item;
+    }
+  }
+
+  /* Confidence threshold avoids confidently returning an unrelated statistic. */
+  if (bestItem && bestScore >= 3.6) return bestItem.answer;
+
+  return "I couldn't confidently match that wording to a verified summary yet. Try rephrasing the question using the subject you want to explore—for example, patient age, gender, disease counts, severity, yearly or monthly trends, state or region, hospital type, treatment, smoking, alcohol, income, insurance, outcomes, recovery days, hospital stay, BMI, treatment cost, follow-up, blood groups, comorbidities or missing values. I will not invent a statistic that is not present in the verified summaries.";
+}
+
+async function askDatasetQuestion(question) {
+  if (!question || !question.trim() || !analystAnswer) return;
+
+  const submittedQuestion = question.trim();
+  const askButton = analystForm ? analystForm.querySelector('button[type="submit"]') : null;
+
+  analystAnswer.textContent = "Connecting to HealthScope AI and analysing your question…";
+  if (askButton) {
+    askButton.disabled = true;
+    askButton.dataset.originalText = askButton.textContent;
+    askButton.textContent = "Analysing…";
+  }
+
+  try {
+    const response = await fetch("http://127.0.0.1:5000/api/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: submittedQuestion })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || result.status !== "success") {
+      throw new Error(result.answer || "The HealthScope API could not process this question.");
+    }
+
+    const answerText = result.answer || "No answer was returned.";
+    const aiLabel = result.ai_status === "Gemini AI"
+      ? "Gemini AI + Python analysis"
+      : "Python analysis (Gemini fallback)";
+
+    analystAnswer.textContent = answerText + "\n\n— " + aiLabel;
+
+  } catch (error) {
+    console.error("HealthScope API connection error:", error);
+    analystAnswer.textContent =
+      "I couldn't connect to the HealthScope backend. Make sure Flask is running at http://127.0.0.1:5000 and try again. Details: " +
+      error.message;
+  } finally {
+    if (askButton) {
+      askButton.disabled = false;
+      askButton.textContent = askButton.dataset.originalText || "Ask ↗";
+      delete askButton.dataset.originalText;
+    }
+  }
+}
+
+if (analystForm) analystForm.addEventListener("submit", event => {
+  event.preventDefault();
+  askDatasetQuestion(analystQuestion.value);
+});
+
+
+/* =====================================================
+   4. MOBILE NAVIGATION
+===================================================== */
+
+const menuButton = document.getElementById("menu");
+const navLinks = document.getElementById("navlinks");
+
+if (menuButton && navLinks) {
+
+  menuButton.addEventListener("click", () => {
+
+    const isOpen = navLinks.classList.toggle("open");
+
+    menuButton.setAttribute(
+      "aria-expanded",
+      String(isOpen)
+    );
+
+    menuButton.textContent = isOpen
+      ? "✕ Close"
+      : "☰ Menu";
+
+  });
+
+  /* Close mobile navigation after selecting a link. */
+
+  navLinks.querySelectorAll("a").forEach(link => {
+
+    link.addEventListener("click", () => {
+
+      navLinks.classList.remove("open");
+
+      menuButton.setAttribute("aria-expanded", "false");
+      menuButton.textContent = "☰ Menu";
+
+    });
+
+  });
+
+  /* Close navigation if the screen becomes desktop-sized. */
+
+  window.addEventListener("resize", () => {
+
+    if (window.innerWidth > 680) {
+
+      navLinks.classList.remove("open");
+
+      menuButton.setAttribute("aria-expanded", "false");
+      menuButton.textContent = "☰ Menu";
+
+    }
+
+  });
+
+}
+
+
+/* =====================================================
+   5. SCROLL PROGRESS BAR
+===================================================== */
+
+const progress = document.getElementById("progress");
+
+function updateProgress() {
+
+  const scrollableHeight =
+    document.documentElement.scrollHeight - window.innerHeight;
+
+  const percentage = scrollableHeight > 0
+    ? (window.scrollY / scrollableHeight) * 100
+    : 0;
+
+  progress.style.width = percentage + "%";
+
+}
+
+window.addEventListener("scroll", updateProgress, {
+  passive: true
+});
+
+window.addEventListener("resize", updateProgress);
+
+updateProgress();
+
+
+/* =====================================================
+   FULL-PAGE EARTH ZOOM — INDIA BECOMES THE FOCAL POINT
+   The Earth remains centered behind every section.
+   Zoom is bounded and mapped to total page scroll progress.
+===================================================== */
+(function globalEarthScrollZoom() {
+  const root = document.documentElement;
+  const earthWrap = document.querySelector(".global-earth-wrap");
+  const callout = document.querySelector(".global-india-callout");
+  let ticking = false;
+
+  function updateEarth() {
+    const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    const progress = Math.min(1, Math.max(0, window.scrollY / maxScroll));
+
+    // A gentle, finite zoom: 1.00 at the top to 1.62 at the bottom.
+    const zoom = 1 + progress * 0.62;
+    // Slight upward adjustment keeps the globe visually centered as it enlarges.
+    const verticalShift = progress * -2.5;
+
+    if (earthWrap) {
+      earthWrap.style.transform =
+        `translate(-50%, calc(-50% + ${verticalShift}vh)) scale(${zoom.toFixed(3)})`;
+      earthWrap.style.opacity = (0.18 + progress * 0.10).toFixed(3);
+    }
+    if (callout) {
+      callout.style.opacity = (0.72 + progress * 0.28).toFixed(2);
+      callout.style.transform = `scale(${1 + progress * 0.08})`;
+    }
+
+    ticking = false;
+  }
+
+  window.addEventListener("scroll", () => {
+    if (!ticking) {
+      requestAnimationFrame(updateEarth);
+      ticking = true;
+    }
+  }, { passive: true });
+  window.addEventListener("resize", updateEarth);
+  updateEarth();
+})();
+
+
+/* =====================================================
+   7. REVEAL ANIMATIONS
+===================================================== */
+
+const revealElements = document.querySelectorAll(".reveal");
+
+if ("IntersectionObserver" in window) {
+
+  const revealObserver = new IntersectionObserver(
+    entries => {
+
+      entries.forEach(entry => {
+
+        if (entry.isIntersecting) {
+
+          entry.target.classList.add("visible");
+
+          revealObserver.unobserve(entry.target);
+
+        }
+
+      });
+
+    },
+    {
+      threshold: 0.10,
+      rootMargin: "0px 0px -35px 0px"
+    }
+  );
+
+  revealElements.forEach(element => {
+    revealObserver.observe(element);
+  });
+
+} else {
+
+  revealElements.forEach(element => {
+    element.classList.add("visible");
+  });
+
+}
+
+
+/* =====================================================
+   8. SECTION NAVIGATION DOTS
+===================================================== */
+
+const sections = [
+  ...document.querySelectorAll("main section[id]")
+];
+
+const dotsContainer = document.getElementById("dots");
+
+if (dotsContainer) {
+
+  sections.forEach(section => {
+
+    const link = document.createElement("a");
+
+    link.href = "#" + section.id;
+    link.title = section.id;
+    link.setAttribute("aria-label", section.id);
+
+    dotsContainer.appendChild(link);
+
+  });
+
+}
+
+const dotLinks = dotsContainer
+  ? [...dotsContainer.querySelectorAll("a")]
+  : [];
+
+
+/* =====================================================
+   9. ACTIVE SECTION TRACKING
+===================================================== */
+
+if ("IntersectionObserver" in window) {
+
+  const activeObserver = new IntersectionObserver(
+    entries => {
+
+      entries.forEach(entry => {
+
+        if (!entry.isIntersecting) {
+          return;
+        }
+
+        const activeIndex = sections.indexOf(entry.target);
+
+        dotLinks.forEach((link, index) => {
+
+          link.classList.toggle(
+            "active",
+            index === activeIndex
+          );
+
+        });
+
+      });
+
+    },
+    {
+      rootMargin: "-42% 0px -42% 0px",
+      threshold: 0
+    }
+  );
+
+  sections.forEach(section => {
+    activeObserver.observe(section);
+  });
+
+}
+
+
+/* =====================================================
+   10. AUTOMATIC COPYRIGHT YEAR
+===================================================== */
+
+const yearElement = document.getElementById("year");
+
+if (yearElement) {
+  yearElement.textContent = new Date().getFullYear();
+}
+
+
+</script>
+
+</div>
+</body>
+</html>
